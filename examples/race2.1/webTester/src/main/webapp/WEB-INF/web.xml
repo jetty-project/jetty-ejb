@@ -7,7 +7,7 @@
 
   <servlet>
     <servlet-name>tester</servlet-name>
-    <servlet-class>org.eclipse.jetty.demo.TesterServlet</servlet-class>
+    <servlet-class>jetty.demo.ejb.TesterServlet</servlet-class>
   </servlet>
 
   <servlet-mapping>

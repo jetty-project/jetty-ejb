@@ -1,7 +1,10 @@
-package org.eclipse.jetty.demo.ejb;
+package jetty.demo.ejb;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import jetty.demo.ejb.TeamDetails;
+
 
 public class RaceDetails
 {

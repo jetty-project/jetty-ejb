@@ -1,4 +1,4 @@
-package org.eclipse.jetty.demo.ejb.common;
+package jetty.demo.common;
 
 import java.rmi.RemoteException;
 

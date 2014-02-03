@@ -1,21 +1,22 @@
-package org.eclipse.jetty.demo.ejb;
+package jetty.demo.ejb;
 
 import javax.ejb.SessionBean;
 
-import org.eclipse.jetty.demo.ejb.common.AbstractSessionBean;
+import jetty.demo.common.AbstractSessionBean;
+
 
 /**
  * @ejb.bean
  *    display-name="TeamInfoEJB" 
  *    name="TeamInfoEJB" 
  *    view-type="remote" 
- *    impl-class-name="org.eclipse.jetty.demo.ejb.TeamInfoBean"
+ *    impl-class-name="jetty.demo.ejb.TeamInfoBean"
  * @ejb.home 
  *    generate="remote"
- *    remote-class="org.eclipse.jetty.demo.ejb.TeamInfoHome"
+ *    remote-class="jetty.demo.ejb.TeamInfoHome"
  * @ejb.interface 
  *    generate="remote"
- *    remote-class="org.eclipse.jetty.demo.ejb.TeamInfo"
+ *    remote-class="jetty.demo.ejb.TeamInfo"
  */
 public class TeamInfoBean extends AbstractSessionBean implements SessionBean
 {

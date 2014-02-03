@@ -1,4 +1,4 @@
-package org.eclipse.jetty.demo.ejb;
+package jetty.demo.ejb;
 
 import java.io.Serializable;
 import java.util.ArrayList;

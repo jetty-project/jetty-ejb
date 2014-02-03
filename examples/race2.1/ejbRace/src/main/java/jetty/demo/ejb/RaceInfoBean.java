@@ -1,4 +1,4 @@
-package org.eclipse.jetty.demo.ejb;
+package jetty.demo.ejb;
 
 import java.rmi.RemoteException;
 
@@ -6,20 +6,21 @@ import javax.ejb.SessionBean;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.eclipse.jetty.demo.ejb.common.AbstractSessionBean;
+import jetty.demo.common.AbstractSessionBean;
+
 
 /**
  * @ejb.bean
  *      display-name="RaceEJB"
  *      name="RaceEJB"
  *      view-type="remote"
- *      impl-class-name="org.eclipse.jetty.demo.ejb.RaceInfoBean"
+ *      impl-class-name="jetty.demo.ejb.RaceInfoBean"
  * @ejb.home
  *      generate="remote"
- *      remote-class="org.eclipse.jetty.demo.ejb.RacenfoHome"
+ *      remote-class="jetty.demo.ejb.RacenfoHome"
  * @ejb.interface
  *      generate="remote"
- *      remote-class="org.eclipse.jetty.demo.ejb.RaceInfo"
+ *      remote-class="jetty.demo.ejb.RaceInfo"
  *
  */
 public class RaceInfoBean extends AbstractSessionBean implements SessionBean
