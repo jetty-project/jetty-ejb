@@ -1,0 +1,8 @@
+*.swp
+*.log
+/logs/*
+target
+.classpath
+.project
+.settings
+/webapps/jetty-slf4j*.war
