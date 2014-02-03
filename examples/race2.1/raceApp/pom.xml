@@ -9,7 +9,8 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
   <artifactId>raceApp</artifactId>
-  <name>EJB 2.1 : Race App</name>
+  <name>APPRace</name>
+  <description>EJB 2.1 : Race App</description>
   <packaging>ear</packaging>
   <dependencies>
     <dependency>
@@ -23,6 +24,12 @@
       <artifactId>ejbRace</artifactId>
       <version>${project.version}</version>
       <type>ejb</type>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.demo</groupId>
+      <artifactId>webTester</artifactId>
+      <version>${project.version}</version>
+      <type>war</type>
     </dependency>
   </dependencies>
   <build>

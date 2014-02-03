@@ -8,13 +8,14 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
   <artifactId>race2.1-parent</artifactId>
-  <name>EJB 2.1 Example Application</name>
+  <name>Example: Race App (EJB 2.1)</name>
   <packaging>pom</packaging>
   <modules>
     <module>common</module>
     <module>ejbTeam</module>
     <module>ejbRace</module>
     <module>raceApp</module>
+    <module>webTester</module>
   </modules>
   <dependencies>
     <dependency>
