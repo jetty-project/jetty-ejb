@@ -1,4 +1,4 @@
-package org.eclipse.jetty.openejb;
+package org.eclipse.jetty.openejb.webapp;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;

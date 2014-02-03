@@ -16,7 +16,7 @@
 //  ========================================================================
 //
 
-package org.eclipse.jetty.openejb;
+package org.eclipse.jetty.openejb.jndi;
 
 import java.util.Properties;
 

@@ -28,6 +28,8 @@ import org.apache.openejb.assembler.classic.WebAppBuilder;
 import org.apache.openejb.assembler.classic.WebAppInfo;
 import org.apache.openejb.loader.SystemInstance;
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.openejb.webapp.JettyWebAppBuilder;
+import org.eclipse.jetty.openejb.webapp.JettyWebAppFinder;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 import org.eclipse.jetty.webapp.AbstractConfiguration;

@@ -4,6 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
 import org.apache.openejb.OpenEJBException;
 import org.apache.openejb.assembler.classic.AppInfo;
 import org.apache.openejb.assembler.classic.WebAppBuilder;
@@ -11,6 +14,7 @@ import org.apache.openejb.config.AppModule;
 import org.apache.openejb.config.ConfigurationFactory;
 import org.apache.openejb.config.DeploymentLoader;
 import org.apache.openejb.loader.SystemInstance;
+import org.eclipse.jetty.openejb.jndi.JndiUtil;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.util.MultiException;
 import org.eclipse.jetty.util.log.Log;
@@ -92,6 +96,11 @@ public class JettyOpenEJBAppContexts extends HandlerCollection
         LOG.debug("Configuring: {}",appModule);
         AppInfo appInfo = configFactory.configureApplication(appModule);
         LOG.debug("Configured: {}",appInfo);
+        
+        if(LOG.isDebugEnabled())
+        {
+            JndiUtil.dump();
+        }
 
         WebAppBuilder builder = SystemInstance.get().getComponent(WebAppBuilder.class);
         try

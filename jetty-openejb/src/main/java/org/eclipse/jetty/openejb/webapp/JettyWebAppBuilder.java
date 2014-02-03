@@ -1,4 +1,4 @@
-package org.eclipse.jetty.openejb;
+package org.eclipse.jetty.openejb.webapp;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -16,26 +16,26 @@ import org.apache.openejb.config.AppModule;
 import org.apache.openejb.config.ConfigurationFactory;
 import org.apache.openejb.config.DeploymentLoader;
 import org.apache.openejb.config.WebModule;
+import org.apache.openejb.core.TempClassLoader;
 import org.apache.openejb.loader.SystemInstance;
+import org.eclipse.jetty.openejb.JettyOpenEJBContext;
 import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
+import org.eclipse.jetty.webapp.WebAppClassLoader;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 public class JettyWebAppBuilder implements WebAppBuilder
 {
     private static final Logger LOG = Log.getLogger(JettyWebAppBuilder.class);
-    private final Server server;
     private final ConfigurationFactory configFactory;
     private final DeploymentLoader deployLoader;
     private Map<String, JettyOpenEJBContext> contexts = new HashMap<>();
     private Map<ClassLoader, Map<String, Set<String>>> jsfClasses = new HashMap<ClassLoader, Map<String, Set<String>>>();
 
-    public JettyWebAppBuilder(Server server)
+    public JettyWebAppBuilder()
     {
-        this.server = server;
         this.configFactory = new ConfigurationFactory();
         this.deployLoader = new DeploymentLoader();
     }
@@ -49,6 +49,13 @@ public class JettyWebAppBuilder implements WebAppBuilder
     public void deployWebApps(AppInfo appInfo, ClassLoader classLoader) throws Exception
     {
         LOG.debug("deployWebApps({},{})",appInfo,classLoader);
+
+        ClassLoader parent = classLoader;
+        if (parent instanceof TempClassLoader)
+        {
+            parent = ((TempClassLoader)parent).getParent();
+        }
+
         HandlerCollection handlers = getHandlers();
         for (WebAppInfo webappInfo : appInfo.webApps)
         {
@@ -61,6 +68,7 @@ public class JettyWebAppBuilder implements WebAppBuilder
             {
                 WebAppContext webapp = new WebAppContext();
                 webapp.setWar(appFile.getAbsolutePath());
+                webapp.setClassLoader(new WebAppClassLoader(parent,webapp));
                 String contextRoot = webappInfo.contextRoot;
                 if (contextRoot.charAt(0) != '/')
                 {

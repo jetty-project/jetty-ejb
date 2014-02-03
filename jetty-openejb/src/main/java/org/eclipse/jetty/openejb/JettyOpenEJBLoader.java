@@ -19,6 +19,8 @@ import org.apache.openejb.server.ejbd.EjbServer;
 import org.apache.openejb.util.LogCategory;
 import org.apache.openejb.util.OptionsLog;
 import org.eclipse.jetty.openejb.jndi.JettyJndiFactory;
+import org.eclipse.jetty.openejb.webapp.JettyWebAppBuilder;
+import org.eclipse.jetty.openejb.webapp.JettyWebAppDeployer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
@@ -60,7 +62,7 @@ public class JettyOpenEJBLoader implements Loader
 
         Server server = SystemInstance.get().getComponent(Server.class);
 
-        SystemInstance.get().setComponent(WebAppBuilder.class,new JettyWebAppBuilder(server));
+        SystemInstance.get().setComponent(WebAppBuilder.class,new JettyWebAppBuilder());
 
         SystemInstance.get().setComponent(ParentClassLoaderFinder.class,new JettyParentClassLoaderFinder(server));
 

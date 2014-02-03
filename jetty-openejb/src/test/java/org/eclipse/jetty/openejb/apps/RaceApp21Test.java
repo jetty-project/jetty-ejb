@@ -99,7 +99,7 @@ public class RaceApp21Test
     @Test
     public void getTeamInfo() throws UnknownHostException, IOException
     {
-        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/team-info");
+        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/team-info/cherry");
         assertThat("response",resp,containsString("cherry"));
     }
 }
