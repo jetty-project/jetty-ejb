@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.eclipse.jetty.demo</groupId>
+    <artifactId>race2.1-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>ejbTeam</artifactId>
+  <name>EJBTeam</name>
+  <description>EJB 2.1 : EJB Team</description>
+  <packaging>ejb</packaging>
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.jetty.demo</groupId>
+      <artifactId>common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maevn.plugins</groupId>
+        <artifactId>maven-ejb-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+          <ejbVersion>2.1</ejbVersion>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>xdoclet-maven-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>xdoclet</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <ejbdoclet verbose="true" force="true" ejbSpec="2.1"
+                  destDir="${project.build.directory}/generated-sources/xdoclet">
+                  <fileset dir="${project.build.sourceDirectory}">
+                    <include name="**/*Bean.java"/>
+                  </fileset>
+                  <homeinterface/>
+                  <remoteinterface/>
+                  <localhomeinterface/>
+                  <localinterface/>
+                  <deploymentdescriptor 
+                    destDir="${project.build.outputDirectory}/META-INF"
+                    displayName="${project.name}"
+                    description="${project.description}"/>
+                </ejbdoclet>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
