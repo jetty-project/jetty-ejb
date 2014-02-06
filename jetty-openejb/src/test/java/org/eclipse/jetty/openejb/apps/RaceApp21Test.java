@@ -102,4 +102,19 @@ public class RaceApp21Test
         String resp = new SimpleRequest(serverURI).getString("/webTester/tester/team-info/cherry");
         assertThat("response",resp,containsString("cherry"));
     }
+    
+    @Test
+    public void getFindTeamInfo() throws UnknownHostException, IOException
+    {
+        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/find-team-info/");
+        assertThat("response",resp,containsString("cherry"));
+    }
+
+    @Test
+    public void testJNDI() throws UnknownHostException, IOException
+    {
+        // String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-lookup/java:openejb/Container/Default%20Stateless%20Container/");
+        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-lookup/java:");
+        assertThat("response",resp,containsString("cherry"));
+    }
 }

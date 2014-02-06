@@ -13,7 +13,7 @@ public final class JndiUtil
         try
         {
             System.out.printf("Context: [%s] %s%n",context.getNameInNamespace(),context);
-            NamingEnumeration<NameClassPair> en = context.list("/*");
+            NamingEnumeration<NameClassPair> en = context.list("/");
             while (en.hasMore())
             {
                 NameClassPair entry = en.next();

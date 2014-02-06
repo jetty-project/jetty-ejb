@@ -40,6 +40,8 @@
         <version>2.9</version>
         <configuration>
           <includeLibInApplicationXml>true</includeLibInApplicationXml>
+          <fileNameMapping>no-version</fileNameMapping>
+          <version>1.4</version>
         </configuration>
       </plugin>
     </plugins>

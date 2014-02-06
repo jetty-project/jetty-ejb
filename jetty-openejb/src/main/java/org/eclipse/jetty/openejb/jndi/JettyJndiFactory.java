@@ -26,6 +26,7 @@ import org.apache.openejb.OpenEJBRuntimeException;
 import org.apache.openejb.SystemException;
 import org.apache.openejb.core.JndiFactory;
 import org.eclipse.jetty.jndi.NamingContext;
+import org.eclipse.jetty.jndi.NamingUtil;
 import org.eclipse.jetty.jndi.java.javaRootURLContext;
 import org.eclipse.jetty.jndi.local.localContextRoot;
 import org.eclipse.jetty.util.log.Log;
@@ -42,14 +43,13 @@ public class JettyJndiFactory implements JndiFactory
 
         try
         {
-            Context openEjbContext = jndiRootContext.createSubcontext("openejb");
-            openEjbContext.createSubcontext("local");
-            openEjbContext.createSubcontext("remote");
-            openEjbContext.createSubcontext("client");
-            openEjbContext.createSubcontext("Deployment");
-            openEjbContext.createSubcontext("global");
-            openEjbContext.createSubcontext("Container");
-            openEjbContext.createSubcontext("Resource");
+            NamingUtil.bind(jndiRootContext,"openejb/local/.","");
+            NamingUtil.bind(jndiRootContext,"openejb/remote/.","");
+            NamingUtil.bind(jndiRootContext,"openejb/client/.","");
+            NamingUtil.bind(jndiRootContext,"openejb/Deployment/.","");
+            NamingUtil.bind(jndiRootContext,"openejb/global/.","");
+            NamingUtil.bind(jndiRootContext,"openejb/Container/.","");
+            NamingUtil.bind(jndiRootContext,"openejb/Resource/.","");
         }
         catch (javax.naming.NamingException e)
         {

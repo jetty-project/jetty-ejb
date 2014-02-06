@@ -17,7 +17,7 @@ import jetty.demo.common.AbstractSessionBean;
  *      impl-class-name="jetty.demo.ejb.RaceInfoBean"
  * @ejb.home
  *      generate="remote"
- *      remote-class="jetty.demo.ejb.RacenfoHome"
+ *      remote-class="jetty.demo.ejb.RaceInfoHome"
  * @ejb.interface
  *      generate="remote"
  *      remote-class="jetty.demo.ejb.RaceInfo"

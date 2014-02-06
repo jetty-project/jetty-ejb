@@ -4,9 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import org.apache.openejb.OpenEJBException;
 import org.apache.openejb.assembler.classic.AppInfo;
 import org.apache.openejb.assembler.classic.WebAppBuilder;
@@ -15,6 +12,7 @@ import org.apache.openejb.config.ConfigurationFactory;
 import org.apache.openejb.config.DeploymentLoader;
 import org.apache.openejb.loader.SystemInstance;
 import org.eclipse.jetty.openejb.jndi.JndiUtil;
+import org.eclipse.jetty.openejb.util.Dumper;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.util.MultiException;
 import org.eclipse.jetty.util.log.Log;
@@ -99,6 +97,7 @@ public class JettyOpenEJBAppContexts extends HandlerCollection
         
         if(LOG.isDebugEnabled())
         {
+            dump(appInfo);
             JndiUtil.dump();
         }
 
@@ -115,6 +114,39 @@ public class JettyOpenEJBAppContexts extends HandlerCollection
         {
             throw new OpenEJBException(e);
         }
+    }
+
+    private void dump(AppInfo info)
+    {
+        LOG.debug("AppInfo: {}",Dumper.describe(info));
+        /*
+        LOG.debug("  .appId: {}",info.appId);
+        LOG.debug("  .appJndiEnc: {}",info.appJndiEnc);
+        LOG.debug("  .autoDeploy: {}",info.autoDeploy);
+        LOG.debug("  .clients: {}",info.clients);
+        LOG.debug("  .cmpMappingsXml: {}",info.cmpMappingsXml);
+        LOG.debug("  .connectors: {}",info.connectors);
+        LOG.debug("  .delegateFirst: {}",info.delegateFirst);
+        LOG.debug("  .ejbJars: {}",info.ejbJars);
+        LOG.debug("  .eventClassesNeedingAppClassloader: {}",info.eventClassesNeedingAppClassloader);
+        LOG.debug("  .globalJndiEnc: {}",info.globalJndiEnc);
+        LOG.debug("  .jaxrsProviders: {}",info.jaxRsProviders);
+        LOG.debug("  .jmx: {}",info.jmx);
+        LOG.debug("  .jsfClasses: {}",info.jsfClasses);
+        LOG.debug("  .libs: {}",info.libs);
+        LOG.debug("  .mbeans: {}",info.mbeans);
+        LOG.debug("  .path: {}",info.path);
+        LOG.debug("  .paths: {}",info.paths);
+        LOG.debug("  .persistenceUnits: {}",info.persistenceUnits);
+        LOG.debug("  .pojoConfigurations: {}",info.pojoConfigurations);
+        LOG.debug("  .properties: {}",info.properties);
+        LOG.debug("  .resourceAliases: {}",info.resourceAliases);
+        LOG.debug("  .resourceIds: {}",info.resourceIds);
+        LOG.debug("  .services: {}",info.services);
+        LOG.debug("  .standaloneModule: {}",info.standaloneModule);
+        LOG.debug("  .watchedResources: {}",info.watchedResources);
+        LOG.debug("  .webAppAlone: {}",info.webAppAlone);
+        LOG.debug("  .webApps: {}",info.webApps); */
     }
 
     private void dump(AppModule module)

@@ -75,9 +75,9 @@ public class JettyOpenEJBLoader implements Loader
 
         ejbServer = new EjbServer();
         SystemInstance.get().setComponent(EjbServer.class,ejbServer);
-        OpenEJB.init(properties,new ServerFederation());
 
         SystemInstance.get().setComponent(Assembler.class,new Assembler(new JettyJndiFactory()));
+        OpenEJB.init(properties);
 
         // TODO: move JNDI resources defined in server to OpenEJB?
 
