@@ -1,8 +1,15 @@
+# Temp Files
 *.swp
 *.log
-/logs/*
+
+# Maven Files
 target
+
+# Eclipse Files
 .classpath
 .project
 .settings
-/webapps/jetty-slf4j*.war
+
+# OSX Debris
+.DS_Store
+
