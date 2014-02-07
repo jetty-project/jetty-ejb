@@ -41,7 +41,7 @@
         <configuration>
           <includeLibInApplicationXml>true</includeLibInApplicationXml>
           <fileNameMapping>no-version</fileNameMapping>
-          <version>1.4</version>
+          <version>1.3</version>
         </configuration>
       </plugin>
     </plugins>

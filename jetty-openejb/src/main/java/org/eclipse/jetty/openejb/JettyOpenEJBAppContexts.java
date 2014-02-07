@@ -1,33 +1,71 @@
+//
+//  ========================================================================
+//  Copyright (c) 1995-2014 Mort Bay Consulting Pty. Ltd.
+//  ------------------------------------------------------------------------
+//  All rights reserved. This program and the accompanying materials
+//  are made available under the terms of the Eclipse Public License v1.0
+//  and Apache License v2.0 which accompanies this distribution.
+//
+//      The Eclipse Public License is available at
+//      http://www.eclipse.org/legal/epl-v10.html
+//
+//      The Apache License v2.0 is available at
+//      http://www.opensource.org/licenses/apache2.0.php
+//
+//  You may elect to redistribute this code under either of these licenses.
+//  ========================================================================
+//
+
 package org.eclipse.jetty.openejb;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import javax.naming.Context;
+import javax.naming.NamingException;
+
+import org.apache.openejb.AppContext;
+import org.apache.openejb.NoSuchApplicationException;
 import org.apache.openejb.OpenEJBException;
+import org.apache.openejb.UndeployException;
+import org.apache.openejb.assembler.WebAppDeployer;
 import org.apache.openejb.assembler.classic.AppInfo;
-import org.apache.openejb.assembler.classic.WebAppBuilder;
-import org.apache.openejb.config.AppModule;
+import org.apache.openejb.assembler.classic.Assembler;
 import org.apache.openejb.config.ConfigurationFactory;
-import org.apache.openejb.config.DeploymentLoader;
 import org.apache.openejb.loader.SystemInstance;
-import org.eclipse.jetty.openejb.jndi.JndiUtil;
 import org.eclipse.jetty.openejb.util.Dumper;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.util.MultiException;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 
-public class JettyOpenEJBAppContexts extends HandlerCollection
+public class JettyOpenEJBAppContexts extends HandlerCollection implements JettyEJBContainer
 {
     private static final Logger LOG = Log.getLogger(JettyOpenEJBAppContexts.class);
+
+    static
+    {
+        Assembler.installNaming("org.eclipse.jetty.jndi",true);
+    }
+
     private List<File> appRefs = new ArrayList<>();
-    private DeploymentLoader deployLoader;
+    private Map<String, String> modules = new HashMap<>();
+    private Map<String, AppInfo> appInfos = new HashMap<>();
+    private Map<String, AppContext> appContexts = new HashMap<>();
+    // private DeploymentLoader deployLoader;
+    private WebAppDeployer webappDeployer;
     private ConfigurationFactory configFactory;
+    private Assembler assembler;
 
     public JettyOpenEJBAppContexts()
     {
         SystemInstance.get().setComponent(HandlerCollection.class,this);
+        SystemInstance.get().setComponent(JettyEJBContainer.class,this);
     }
 
     public void addApp(File appFile)
@@ -39,28 +77,32 @@ public class JettyOpenEJBAppContexts extends HandlerCollection
         appRefs.add(appFile);
     }
 
+    private <T> T getRequiredSystemComponent(Class<T> type) throws OpenEJBException
+    {
+        T component = SystemInstance.get().getComponent(type);
+        LOG.debug("Get System Component {} => {}",type.getName(),component);
+        if (component == null)
+        {
+            throw new OpenEJBException("Unable to find required component: " + type.getName());
+        }
+        return component;
+    }
+
     @Override
     protected void doStart() throws Exception
     {
         List<Throwable> errors = new ArrayList<>();
 
-        deployLoader = SystemInstance.get().getComponent(DeploymentLoader.class);
-        if (deployLoader == null)
-        {
-            deployLoader = new DeploymentLoader();
-        }
-        configFactory = SystemInstance.get().getComponent(ConfigurationFactory.class);
-        if (configFactory == null)
-        {
-            configFactory = new ConfigurationFactory();
-        }
+        webappDeployer = getRequiredSystemComponent(WebAppDeployer.class);
+        configFactory = getRequiredSystemComponent(ConfigurationFactory.class);
+        assembler = getRequiredSystemComponent(Assembler.class);
 
         // Loop through each app and load -> deploy it
         for (File appRef : appRefs)
         {
             try
             {
-                loadAndDeploy(appRef);
+                deploy(appRef);
             }
             catch (Throwable t)
             {
@@ -82,99 +124,94 @@ public class JettyOpenEJBAppContexts extends HandlerCollection
         super.doStart();
     }
 
-    private void loadAndDeploy(File appRef) throws OpenEJBException
+    private void deploy(File appRef) throws OpenEJBException, IOException, NamingException
     {
-        LOG.debug("Loading: {}",appRef);
-        AppModule appModule = deployLoader.load(appRef);
-        LOG.debug("Loaded module: {}",appModule);
-        if (LOG.isDebugEnabled())
+        deploy(appRef.getName(),appRef);
+    }
+
+    @Override
+    public AppContext deploy(String name, File file) throws OpenEJBException, IOException, NamingException
+    {
+        LOG.debug("Deploying: {}: {}",name,file);
+
+        AppInfo appInfo;
+        AppContext appContext;
+
+        if (WebAppDeployer.Helper.isWebApp(file))
         {
-            dump(appModule);
+            // WebModule deployment
+            String contextPath = file.getName();
+
+            appInfo = webappDeployer.deploy(contextPath,file);
+
+            if (appInfo != null)
+            {
+                appContext = assembler.getContainerSystem().getAppContext(appInfo.appId);
+            }
+            else
+            {
+                appContext = null;
+            }
         }
-        LOG.debug("Configuring: {}",appModule);
-        AppInfo appInfo = configFactory.configureApplication(appModule);
-        LOG.debug("Configured: {}",appInfo);
-        
-        if(LOG.isDebugEnabled())
+        else
         {
-            dump(appInfo);
-            JndiUtil.dump();
+            // Other Deployment (like EAR)
+            appInfo = configFactory.configureApplication(file);
+            appContext = assembler.createApplication(appInfo);
         }
 
-        WebAppBuilder builder = SystemInstance.get().getComponent(WebAppBuilder.class);
-        try
+//        if (LOG.isDebugEnabled())
+//        {
+//            LOG.debug("AppInfo: {}",Dumper.describe(appInfo));
+//            LOG.debug("AppContext: {}",Dumper.describe(appContext));
+//        }
+
+        modules.put(name,null != appInfo?appInfo.path:null);
+        appInfos.put(name,appInfo);
+        appContexts.put(name,appContext);
+
+        return appContext;
+    }
+
+    @Override
+    public void undeploy(String name) throws UndeployException, NoSuchApplicationException
+    {
+        String moduleId = modules.remove(name);
+        appInfos.remove(name);
+        appContexts.remove(name);
+        if (moduleId != null)
         {
-            builder.deployWebApps(appInfo,appModule.getClassLoader());
-        }
-        catch (OpenEJBException e)
-        {
-            throw e;
-        }
-        catch (Exception e)
-        {
-            throw new OpenEJBException(e);
+            assembler.destroyApplication(moduleId);
         }
     }
 
-    private void dump(AppInfo info)
+    @Override
+    public AppInfo getAppInfo(String name)
     {
-        LOG.debug("AppInfo: {}",Dumper.describe(info));
-        /*
-        LOG.debug("  .appId: {}",info.appId);
-        LOG.debug("  .appJndiEnc: {}",info.appJndiEnc);
-        LOG.debug("  .autoDeploy: {}",info.autoDeploy);
-        LOG.debug("  .clients: {}",info.clients);
-        LOG.debug("  .cmpMappingsXml: {}",info.cmpMappingsXml);
-        LOG.debug("  .connectors: {}",info.connectors);
-        LOG.debug("  .delegateFirst: {}",info.delegateFirst);
-        LOG.debug("  .ejbJars: {}",info.ejbJars);
-        LOG.debug("  .eventClassesNeedingAppClassloader: {}",info.eventClassesNeedingAppClassloader);
-        LOG.debug("  .globalJndiEnc: {}",info.globalJndiEnc);
-        LOG.debug("  .jaxrsProviders: {}",info.jaxRsProviders);
-        LOG.debug("  .jmx: {}",info.jmx);
-        LOG.debug("  .jsfClasses: {}",info.jsfClasses);
-        LOG.debug("  .libs: {}",info.libs);
-        LOG.debug("  .mbeans: {}",info.mbeans);
-        LOG.debug("  .path: {}",info.path);
-        LOG.debug("  .paths: {}",info.paths);
-        LOG.debug("  .persistenceUnits: {}",info.persistenceUnits);
-        LOG.debug("  .pojoConfigurations: {}",info.pojoConfigurations);
-        LOG.debug("  .properties: {}",info.properties);
-        LOG.debug("  .resourceAliases: {}",info.resourceAliases);
-        LOG.debug("  .resourceIds: {}",info.resourceIds);
-        LOG.debug("  .services: {}",info.services);
-        LOG.debug("  .standaloneModule: {}",info.standaloneModule);
-        LOG.debug("  .watchedResources: {}",info.watchedResources);
-        LOG.debug("  .webAppAlone: {}",info.webAppAlone);
-        LOG.debug("  .webApps: {}",info.webApps); */
+        return appInfos.get(name);
     }
 
-    private void dump(AppModule module)
+    @Override
+    public AppContext getAppContext(String moduleId)
     {
-        LOG.debug("AppModule: {}",module);
-        LOG.debug("  .moduleId: {}",module.getModuleId());
-        LOG.debug("  .moduleUri: {}",module.getModuleUri());
-        LOG.debug("  .file: {}",module.getFile());
-        LOG.debug("  .jarLocation: {}",module.getJarLocation());
-        LOG.debug("  .additionalLibMbeans: {}",module.getAdditionalLibMbeans());
-        LOG.debug("  .additionalLibraries: {}",module.getAdditionalLibraries());
-        LOG.debug("  .altDDs: {}",module.getAltDDs());
-        LOG.debug("  .application: {}",module.getApplication());
-        LOG.debug("  .clientModules: {}",module.getClientModules());
-        LOG.debug("  .cmpMappings: {}",module.getCmpMappings());
-        LOG.debug("  .connectorModules: {}",module.getConnectorModules());
-        LOG.debug("  .deploymentModules: {}",module.getDeploymentModule());
-        LOG.debug("  .earLibFinder: {}",module.getEarLibFinder());
-        LOG.debug("  .ejbModules: {}",module.getEjbModules());
-        LOG.debug("  .jaxRsProviders: {}",module.getJaxRsProviders());
-        LOG.debug("  .persistenceModules: {}",module.getPersistenceModules());
-        LOG.debug("  .pojoConfigurations: {}",module.getPojoConfigurations());
-        LOG.debug("  .properties: {}",module.getProperties());
-        LOG.debug("  .resources: {}",module.getResources());
-        LOG.debug("  .services: {}",module.getServices());
-        LOG.debug("  .validation: {}",module.getValidation());
-        LOG.debug("  .validationContexts: {}",module.getValidationContexts());
-        LOG.debug("  .watchedResources: {}",module.getWatchedResources());
-        LOG.debug("  .webModules: {}",module.getWebModules());
+        return appContexts.get(moduleId);
+    }
+
+    @Override
+    public Set<String> getModuleIds()
+    {
+        return modules.keySet();
+    }
+
+    @Override
+    public Context getJndiContext()
+    {
+        return assembler.getContainerSystem().getJNDIContext();
+    }
+
+    @Override
+    public ConfigurationFactory getConfigurationFactory()
+    {
+        return configFactory;
     }
 }

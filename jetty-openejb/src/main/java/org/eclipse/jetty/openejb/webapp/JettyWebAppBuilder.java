@@ -29,14 +29,12 @@ import org.eclipse.jetty.webapp.WebAppContext;
 public class JettyWebAppBuilder implements WebAppBuilder
 {
     private static final Logger LOG = Log.getLogger(JettyWebAppBuilder.class);
-    private final ConfigurationFactory configFactory;
     private final DeploymentLoader deployLoader;
     private Map<String, JettyOpenEJBContext> contexts = new HashMap<>();
     private Map<ClassLoader, Map<String, Set<String>>> jsfClasses = new HashMap<ClassLoader, Map<String, Set<String>>>();
 
     public JettyWebAppBuilder()
     {
-        this.configFactory = new ConfigurationFactory();
         this.deployLoader = new DeploymentLoader();
     }
 
@@ -101,7 +99,7 @@ public class JettyWebAppBuilder implements WebAppBuilder
                 webMod.setFinder(finder);
             }
 
-            AppInfo appInfo = configFactory.configureApplication(appModule);
+            AppInfo appInfo = SystemInstance.get().getComponent(ConfigurationFactory.class).configureApplication(appModule);
             LOG.debug("appInfo = {}",appInfo);
 
             return appInfo;

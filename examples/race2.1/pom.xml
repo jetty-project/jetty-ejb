@@ -16,6 +16,7 @@
     <module>ejbRace</module>
     <module>raceApp</module>
     <module>webTester</module>
+    <module>itest</module>
   </modules>
   <dependencies>
     <dependency>

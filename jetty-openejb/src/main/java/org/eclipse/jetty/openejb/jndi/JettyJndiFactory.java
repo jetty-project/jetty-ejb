@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.naming.Context;
 
+import org.apache.openejb.JndiConstants;
 import org.apache.openejb.OpenEJBRuntimeException;
 import org.apache.openejb.SystemException;
 import org.apache.openejb.core.JndiFactory;
@@ -35,11 +36,12 @@ import org.eclipse.jetty.util.log.Logger;
 public class JettyJndiFactory implements JndiFactory
 {
     private static final Logger LOG = Log.getLogger(JettyJndiFactory.class);
-    private Context jndiRootContext;
+    private NamingContext jndiRootContext;
 
     public JettyJndiFactory()
     {
         jndiRootContext = javaRootURLContext.getRoot();
+        jndiRootContext.addListener(IgnoreDuplicatesListener.INSTANCE);
 
         try
         {
@@ -48,8 +50,12 @@ public class JettyJndiFactory implements JndiFactory
             NamingUtil.bind(jndiRootContext,"openejb/client/.","");
             NamingUtil.bind(jndiRootContext,"openejb/Deployment/.","");
             NamingUtil.bind(jndiRootContext,"openejb/global/.","");
+            NamingUtil.bind(jndiRootContext,"openejb/global/global/.","");
             NamingUtil.bind(jndiRootContext,"openejb/Container/.","");
-            NamingUtil.bind(jndiRootContext,"openejb/Resource/.","");
+            NamingUtil.bind(jndiRootContext,JndiConstants.VALIDATOR_FACTORY_NAMING_CONTEXT + ".","");
+            NamingUtil.bind(jndiRootContext,JndiConstants.VALIDATOR_NAMING_CONTEXT + ".","");
+            NamingUtil.bind(jndiRootContext,JndiConstants.PERSISTENCE_UNIT_NAMING_CONTEXT + ".","");
+            NamingUtil.bind(jndiRootContext,JndiConstants.OPENEJB_RESOURCE_JNDI_PREFIX + ".","");
         }
         catch (javax.naming.NamingException e)
         {
@@ -62,17 +68,20 @@ public class JettyJndiFactory implements JndiFactory
     public Context createComponentContext(Map<String, Object> bindings) throws SystemException
     {
         NamingContext context = localContextRoot.getRoot();
+        context.addListener(IgnoreDuplicatesListener.INSTANCE);
 
         for (Map.Entry<String, Object> entry : bindings.entrySet())
         {
             String name = entry.getKey();
             Object value = entry.getValue();
             if (value == null)
+            {
                 continue;
+            }
 
             try
             {
-                context.bind(name,value);
+                NamingUtil.bind(context,name,value);
             }
             catch (javax.naming.NamingException e)
             {

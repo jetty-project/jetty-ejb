@@ -8,6 +8,7 @@ import org.apache.openejb.OpenEJB;
 import org.apache.openejb.assembler.WebAppDeployer;
 import org.apache.openejb.assembler.classic.WebAppBuilder;
 import org.apache.openejb.classloader.WebAppEnricher;
+import org.apache.openejb.config.ConfigurationFactory;
 import org.apache.openejb.core.ParentClassLoaderFinder;
 import org.apache.openejb.core.ServerFederation;
 import org.apache.openejb.loader.Loader;
@@ -59,6 +60,8 @@ public class JettyOpenEJBLoader implements Loader
                 System.getProperty("openejb.default.deployment-module","org.apache.openejb.config.WebModule"));
 
         Server server = SystemInstance.get().getComponent(Server.class);
+        
+        SystemInstance.get().setComponent(ConfigurationFactory.class,new ConfigurationFactory());
 
         SystemInstance.get().setComponent(WebAppBuilder.class,new JettyWebAppBuilder());
 

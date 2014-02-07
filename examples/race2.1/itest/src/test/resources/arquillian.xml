@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<arquillian xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <container qualifier="tomee" default="true">
+    <configuration>
+      <property name="httpPort">-1</property>
+      <property name="stopPort">-1</property>
+      <property name="tomcatVersion"></property>
+      <property name="openejbVersion">${tomee.version}</property>
+      <property name="dir">target/apache-tomee-remote</property>
+      <property name="appWorkingDir">target/arquillian-test-working-dir</property>
+    </configuration>
+  </container>
+</arquillian>
