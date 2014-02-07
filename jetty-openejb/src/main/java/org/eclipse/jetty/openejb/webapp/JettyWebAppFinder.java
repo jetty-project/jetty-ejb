@@ -15,6 +15,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.openejb.util.CollectionsUtil;
 import org.apache.xbean.finder.Annotated;
 import org.apache.xbean.finder.IAnnotationFinder;
 import org.eclipse.jetty.annotations.AbstractDiscoverableAnnotationHandler;
@@ -60,7 +62,6 @@ public class JettyWebAppFinder extends AbstractDiscoverableAnnotationHandler imp
 
     private void addToInheritanceMap(String interfaceOrSuperClassName, String implementingOrExtendingClassName)
     {
-
         // As it is likely that the interfaceOrSuperClassName is already in the map, try getting it first
         ConcurrentHashSet<String> implementingClasses = classMap.get(interfaceOrSuperClassName);
         // If it isn't in the map, then add it in, but test to make sure that someone else didn't get in
@@ -361,7 +362,14 @@ public class JettyWebAppFinder extends AbstractDiscoverableAnnotationHandler imp
     private <T> void findSubclasses(Class<? extends T> clazz, List<Class<? extends T>> hits, Class<? extends T> pc)
     {
         LOG.debug("findSubclasses({},{},{})",clazz,hits.size(),pc);
-        for (String className : classMap.get(clazz.getName()))
+        ConcurrentHashSet<String> subset = classMap.get(clazz.getName());
+        if (CollectionUtils.isEmpty(subset))
+        {
+            LOG.debug("No subclasses for {}",clazz.getName());
+            return;
+        }
+
+        for (String className : subset)
         {
             LOG.debug(" - from map: {}",className);
             Class<? extends T> sub = null;

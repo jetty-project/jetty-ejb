@@ -6,7 +6,6 @@ import java.util.Properties;
 
 import org.apache.openejb.OpenEJB;
 import org.apache.openejb.assembler.WebAppDeployer;
-import org.apache.openejb.assembler.classic.Assembler;
 import org.apache.openejb.assembler.classic.WebAppBuilder;
 import org.apache.openejb.classloader.WebAppEnricher;
 import org.apache.openejb.core.ParentClassLoaderFinder;
@@ -18,7 +17,6 @@ import org.apache.openejb.server.ServiceManager;
 import org.apache.openejb.server.ejbd.EjbServer;
 import org.apache.openejb.util.LogCategory;
 import org.apache.openejb.util.OptionsLog;
-import org.eclipse.jetty.openejb.jndi.JettyJndiFactory;
 import org.eclipse.jetty.openejb.webapp.JettyWebAppBuilder;
 import org.eclipse.jetty.openejb.webapp.JettyWebAppDeployer;
 import org.eclipse.jetty.server.Server;
@@ -75,9 +73,7 @@ public class JettyOpenEJBLoader implements Loader
 
         ejbServer = new EjbServer();
         SystemInstance.get().setComponent(EjbServer.class,ejbServer);
-
-        SystemInstance.get().setComponent(Assembler.class,new Assembler(new JettyJndiFactory()));
-        OpenEJB.init(properties);
+        OpenEJB.init(properties, new ServerFederation());
 
         // TODO: move JNDI resources defined in server to OpenEJB?
 

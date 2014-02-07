@@ -18,16 +18,28 @@
 
 package org.eclipse.jetty.openejb;
 
+import java.net.URI;
+
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 
 import org.apache.openejb.assembler.classic.AppInfo;
+import org.apache.openejb.assembler.classic.EjbLocalReferenceInfo;
+import org.apache.openejb.assembler.classic.EjbReferenceInfo;
+import org.apache.openejb.assembler.classic.EnvEntryInfo;
+import org.apache.openejb.assembler.classic.PersistenceContextReferenceInfo;
+import org.apache.openejb.assembler.classic.PersistenceUnitReferenceInfo;
+import org.apache.openejb.assembler.classic.ResourceEnvReferenceInfo;
+import org.apache.openejb.assembler.classic.ResourceReferenceInfo;
+import org.apache.openejb.assembler.classic.ServiceReferenceInfo;
 import org.apache.openejb.assembler.classic.WebAppBuilder;
 import org.apache.openejb.assembler.classic.WebAppInfo;
 import org.apache.openejb.loader.SystemInstance;
+import org.apache.openejb.util.URLs;
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.openejb.util.Dumper;
 import org.eclipse.jetty.openejb.webapp.JettyWebAppBuilder;
 import org.eclipse.jetty.openejb.webapp.JettyWebAppFinder;
 import org.eclipse.jetty.util.log.Log;
@@ -86,6 +98,7 @@ public class OpenEJBConfiguration extends AbstractConfiguration
             if (LOG.isDebugEnabled())
             {
                 dumpJndiTree(context);
+                dumpJndiTree(appInfo);
             }
 
             LOG.debug("appInfo: {}",appInfo);
@@ -106,6 +119,88 @@ public class OpenEJBConfiguration extends AbstractConfiguration
         {
             Thread.currentThread().setContextClassLoader(origCL);
         }
+    }
+
+    private void dumpJndiTree(AppInfo appInfo)
+    {
+        LOG.debug(".dumpJndiTree(AppInfo:{})",appInfo.appId);
+        if ((appInfo.webApps == null) || (appInfo.webApps.isEmpty()))
+        {
+            LOG.debug("No webapps");
+            return;
+        }
+
+        for (WebAppInfo webAppInfo : appInfo.webApps)
+        {
+            URI moduleUri = URLs.uri(webAppInfo.moduleId);
+            for (EnvEntryInfo ref : webAppInfo.jndiEnc.envEntries)
+            {
+                dump(ref);
+            }
+            for (EjbReferenceInfo ref : webAppInfo.jndiEnc.ejbReferences)
+            {
+                dump(ref);
+            }
+            for (EjbLocalReferenceInfo ref : webAppInfo.jndiEnc.ejbLocalReferences)
+            {
+                dump(ref);
+            }
+            for (PersistenceContextReferenceInfo ref : webAppInfo.jndiEnc.persistenceContextRefs)
+            {
+                dump(ref,moduleUri);
+            }
+            for (PersistenceUnitReferenceInfo ref : webAppInfo.jndiEnc.persistenceUnitRefs)
+            {
+                dump(ref,moduleUri);
+            }
+            for (ResourceReferenceInfo ref : webAppInfo.jndiEnc.resourceRefs)
+            {
+                dump(ref);
+            }
+            for (ResourceEnvReferenceInfo ref : webAppInfo.jndiEnc.resourceEnvRefs)
+            {
+                dump(ref);
+            }
+            for (ServiceReferenceInfo ref : webAppInfo.jndiEnc.serviceRefs)
+            {
+                dump(ref);
+            }
+        }
+    }
+
+    private void dump(ServiceReferenceInfo ref)
+    {
+        LOG.debug("ServiceReferenceInfo: {}",Dumper.describe(ref));
+    }
+
+    private void dump(ResourceEnvReferenceInfo ref)
+    {
+        LOG.debug("ResourceEnvReferenceInfo: {}",Dumper.describe(ref));
+    }
+
+    private void dump(ResourceReferenceInfo ref)
+    {
+        LOG.debug("ResourceReferenceInfo: {}",Dumper.describe(ref));
+    }
+
+    private void dump(PersistenceUnitReferenceInfo ref, URI moduleUri)
+    {
+        LOG.debug("PersistenceUnitReferenceInfo[{}]: {}",moduleUri,Dumper.describe(ref));
+    }
+
+    private void dump(PersistenceContextReferenceInfo ref, URI moduleUri)
+    {
+        LOG.debug("PersistenceContextReferenceInfo[{}]: {}",moduleUri,Dumper.describe(ref));
+    }
+
+    private void dump(EjbReferenceInfo ref)
+    {
+        LOG.debug("EjbReferenceInfo: {}",Dumper.describe(ref));
+    }
+
+    private void dump(EnvEntryInfo ref)
+    {
+        LOG.debug("EnvEntryInfo: {}",Dumper.describe(ref));
     }
 
     private void dumpJndiTree(WebAppContext webappContext)

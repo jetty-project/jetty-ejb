@@ -17,20 +17,57 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.util.component.ContainerLifeCycle;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
+import org.eclipse.jetty.webapp.Configuration;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 public class JettyOpenEJB extends ContainerLifeCycle
 {
     private static final Logger LOG = Log.getLogger(JettyOpenEJB.class);
 
+    public static void enableOn(Server server, HandlerCollection handlers)
+    {
+        Core.warmup();
+        JettyOpenEJB joe = new JettyOpenEJB(server,handlers);
+        joe.enableOpenEJB();
+        server.addBean(joe);
+    }
+
     private boolean enabled = false;
     private Server server;
+
     private HandlerCollection handlers;
 
     public JettyOpenEJB(Server server, HandlerCollection handlers)
     {
         this.server = server;
         this.handlers = handlers;
+    }
+
+    private void configWebAppClassLoader(String key, Set<String> patterns)
+    {
+        String strs[] = patterns.toArray(new String[patterns.size()]);
+        server.setAttribute(key,strs);
+    }
+
+    private void configWebAppContextDefaults()
+    {
+        LOG.debug("Configuring WebAppContext Defaults");
+        // Setup Jetty default classloader filters
+        setupWebAppClassloader();
+
+        // Setup Configurations for WebAppContexts
+        Configuration.ClassList conflist = Configuration.ClassList.serverDefault(server);
+
+        // TODO: allow module system to perform?
+        conflist.addBefore("org.eclipse.jetty.webapp.JettyWebXmlConfiguration",//
+                "org.eclipse.jetty.annotations.AnnotationConfiguration");
+        conflist.addAfter("org.eclipse.jetty.webapp.FragmentConfiguration",//
+                "org.eclipse.jetty.plus.webapp.EnvConfiguration",//
+                "org.eclipse.jetty.plus.webapp.PlusConfiguration");
+        // Setup OpenEJB Configuration
+        conflist.addAfter("org.eclipse.jetty.webapp.FragmentConfiguration",//
+                OpenEJBConfiguration.class.getName());
+        server.addBean(conflist);
     }
 
     @Override
@@ -54,8 +91,8 @@ public class JettyOpenEJB extends ContainerLifeCycle
         // Jetty JNDI naming
         Assembler.installNaming("org.eclipse.jetty.jndi",true);
 
-        // Setup Jetty default classloader filters
-        setupWebAppClassloader();
+        // Configure WebAppContext defaults when running in OpenEJB
+        configWebAppContextDefaults();
 
         Properties props = new Properties();
         props.setProperty("openejb.embedder.source",this.getClass().getName());
@@ -69,7 +106,7 @@ public class JettyOpenEJB extends ContainerLifeCycle
 
         String baseDir = System.getProperty("jetty.base",homeDir);
         props.setProperty("openejb.base",baseDir);
-        System.setProperty("openejb.basE",baseDir);
+        System.setProperty("openejb.base",baseDir);
 
         File openEjbWebAppLibs = new File(baseDir,"lib/openejb");
         props.setProperty("openejb.libs",openEjbWebAppLibs.getAbsolutePath());
@@ -88,6 +125,8 @@ public class JettyOpenEJB extends ContainerLifeCycle
 
         SystemInstance.get().setComponent(Server.class,server);
         SystemInstance.get().setComponent(HandlerCollection.class,handlers);
+
+        props.setProperty("openejb.assembler",JettyAssembler.class.getName());
 
         Embedder embedder = new Embedder(JettyOpenEJBLoader.class.getName());
         SystemInstance.get().setComponent(Embedder.class,embedder);
@@ -117,37 +156,18 @@ public class JettyOpenEJB extends ContainerLifeCycle
         return strSet;
     }
 
-    private void configWebAppClassLoader(String key, Set<String> patterns)
-    {
-        String strs[] = patterns.toArray(new String[patterns.size()]);
-        server.setAttribute(key,strs);
-    }
-
     private void setupWebAppClassloader()
     {
         Set<String> serverSysClasses = getStringSetAttribute(WebAppContext.SERVER_SYS_CLASSES,WebAppContext.__dftSystemClasses);
-        // Set<String> serverSrvClasses = getStringSetAttribute(WebAppContext.SERVER_SRV_CLASSES,WebAppContext.__dftServerClasses);
 
         // System Classes
         serverSysClasses.add("javax.ws.");
-        // serverSysClasses.remove("org.eclipse.jetty.jndi."); // temporary
         serverSysClasses.add("org.apache.openejb.");
         serverSysClasses.add("org.apache.xbean.");
         serverSysClasses.add("org.apache.tomee.");
         serverSysClasses.add("org.apache.tomcat.");
 
-        // Server Classes
-        // serverSrvClasses.remove("-org.eclipse.jetty.jndi."); // temporary
-
         configWebAppClassLoader(WebAppContext.SERVER_SYS_CLASSES,serverSysClasses);
         // configWebAppClassLoader(WebAppContext.SERVER_SRV_CLASSES,serverSrvClasses);
-    }
-
-    public static void enableOn(Server server, HandlerCollection handlers)
-    {
-        Core.warmup();
-        JettyOpenEJB joe = new JettyOpenEJB(server,handlers);
-        joe.enableOpenEJB();
-        server.addBean(joe);
     }
 }

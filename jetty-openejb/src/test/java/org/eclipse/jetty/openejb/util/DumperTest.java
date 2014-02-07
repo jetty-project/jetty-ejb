@@ -1,13 +1,19 @@
 package org.eclipse.jetty.openejb.util;
 
-import org.apache.openejb.assembler.classic.JndiEncInfo;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+import java.net.URISyntaxException;
+
 import org.junit.Test;
 
 public class DumperTest
 {
     @Test
-    public void testDumpJndiEnc()
+    public void testDumpFoo() throws URISyntaxException
     {
-        System.out.println(Dumper.describe(new JndiEncInfo()));
+        CharSequence result = Dumper.describe(new Foo());
+        System.out.println(result);
+        assertThat("result",result.toString(),containsString("Foo"));
     }
 }
