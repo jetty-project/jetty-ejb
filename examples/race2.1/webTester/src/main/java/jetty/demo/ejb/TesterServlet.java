@@ -37,6 +37,7 @@ public class TesterServlet extends HttpServlet
         COMMANDS.put("/team-info/",findMethod("doTeamInfo"));
         COMMANDS.put("/find-team-info/",findMethod("doFindTeamInfo"));
         COMMANDS.put("/jndi-lookup/",findMethod("doJndiLookup"));
+        COMMANDS.put("/dump-jndi/",findMethod("doDumpJndi"));
     }
 
     private static Method findMethod(String commandMethodName)
@@ -109,9 +110,29 @@ public class TesterServlet extends HttpServlet
         method.invoke(this,args);
     }
 
+    public void doDumpJndi(PrintWriter out, String name) throws NamingException
+    {
+        LOG.log(Level.FINE,"doDumpJndi(" + name + ")");
+
+        InitialContext context = new InitialContext();
+
+        Object result = context.lookup(name);
+        String prefix = name;
+        if (!prefix.endsWith(":"))
+        {
+            prefix = prefix + "/";
+        }
+
+        out.println("Dump JNDI(searchTerm='" + name + "')");
+        out.println("Lookup Result: " + result);
+
+        JndiDumper.Impl dumper = JndiDumper.getImpl(result);
+        dumper.dump(out,result);
+    }
+
     public void doJndiLookup(PrintWriter out, String name) throws NamingException
     {
-        LOG.log(Level.FINE, "doJndiLookup(" + name + ")");
+        LOG.log(Level.FINE,"doJndiLookup(" + name + ")");
         InitialContext context = new InitialContext();
         out.println("JNDI[" + name + "]");
 
@@ -203,9 +224,9 @@ public class TesterServlet extends HttpServlet
     public void doFindTeamInfo(PrintWriter out, String arg) throws NamingException
     {
         List jndiRefs = new ArrayList();
-//        jndiRefs.add(TeamInfo.class.getName());
-//        jndiRefs.add(TeamInfoHome.class.getName());
-//        jndiRefs.add(TeamInfoBean.class.getName());
+        // jndiRefs.add(TeamInfo.class.getName());
+        // jndiRefs.add(TeamInfoHome.class.getName());
+        // jndiRefs.add(TeamInfoBean.class.getName());
         jndiRefs.add("openejb:global/global/raceApp/ejbTeam/TeamInfoEJB!jetty.demo.ejb.TeamInfoHome");
         jndiRefs.add("openejb:global/global/raceApp/ejbTeam/TeamInfoEJB");
         jndiRefs.add("java:global/raceApp/ejbTeam/TeamInfoEJB");
@@ -282,4 +303,5 @@ public class TesterServlet extends HttpServlet
             }
         }
     }
+
 }

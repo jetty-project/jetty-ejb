@@ -9,8 +9,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 
-import jetty.demo.ejb.logging.LoggingUtil;
-
+import org.eclipse.jetty.toolchain.test.FS;
+import org.eclipse.jetty.toolchain.test.IO;
 import org.eclipse.jetty.toolchain.test.MavenTestingUtils;
 import org.eclipse.jetty.toolchain.test.SimpleRequest;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -28,23 +28,28 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class RaceArquillianTest
 {
-    static {
+    static
+    {
         System.out.printf("logging = %s%n",System.getProperty("java.util.logging.config.file"));
     }
-    
+
     @Deployment
-    public static EnterpriseArchive createDeployment()
+    public static EnterpriseArchive createDeployment() throws IOException
     {
         File pomFile = MavenTestingUtils.getProjectFile("/pom.xml");
-        
+
         MavenResolverSystem resolver = Maven.resolver();
         PomEquippedResolveStage pomStage = resolver.loadPomFromFile(pomFile);
         MavenStrategyStage mvnStage = pomStage.resolve("org.eclipse.jetty.demo:raceApp:ear:1.0-SNAPSHOT");
         File[] ears = mvnStage.withoutTransitivity().asFile();
-        assertThat("ears found", ears, notNullValue());
-        assertThat("ear", ears.length, greaterThanOrEqualTo(1));
+        assertThat("ears found",ears,notNullValue());
+        assertThat("ear",ears.length,greaterThanOrEqualTo(1));
 
-        File mainEarFile = ears[0];
+        File tmpDir = MavenTestingUtils.getTargetTestingDir(RaceArquillianTest.class.getName());
+        FS.ensureEmpty(tmpDir);
+        File mainEarFile = new File(tmpDir,"raceApp.ear");
+
+        IO.copyFile(ears[0],mainEarFile);
 
         EnterpriseArchive ear = ShrinkWrap.createFromZipFile(EnterpriseArchive.class,mainEarFile);
         return ear;
@@ -57,6 +62,13 @@ public class RaceArquillianTest
     public void testJndiLookupJava() throws UnknownHostException, IOException, URISyntaxException
     {
         String resp = new SimpleRequest(deploymentUrl.toURI()).getString("/webTester/tester/jndi-lookup/java:");
+        assertThat("response",resp,containsString("cherry"));
+    }
+
+    @Test
+    public void testFindTeamInfo() throws UnknownHostException, IOException, URISyntaxException
+    {
+        String resp = new SimpleRequest(deploymentUrl.toURI()).getString("/webTester/tester/find-team-info/");
         assertThat("response",resp,containsString("cherry"));
     }
 }

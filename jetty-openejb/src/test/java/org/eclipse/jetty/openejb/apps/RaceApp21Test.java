@@ -109,6 +109,13 @@ public class RaceApp21Test
         String resp = new SimpleRequest(serverURI).getString("/webTester/tester/find-team-info/");
         assertThat("response",resp,containsString("cherry"));
     }
+    
+    @Test
+    public void getDumpJndi() throws UnknownHostException, IOException
+    {
+        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/dump-jndi/java:");
+        assertThat("response",resp,containsString("cherry"));
+    }
 
     @Test
     public void testJNDI() throws UnknownHostException, IOException
