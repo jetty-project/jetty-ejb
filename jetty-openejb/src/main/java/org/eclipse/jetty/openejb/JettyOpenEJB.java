@@ -125,6 +125,11 @@ public class JettyOpenEJB extends ContainerLifeCycle
 
         SystemInstance.get().setComponent(Server.class,server);
         SystemInstance.get().setComponent(HandlerCollection.class,handlers);
+        // as reported by rmannibucau on #openejb (freenode irc) this
+        // property is supposed to instruct openejb to avoid various jndi
+        // spec breaking behaviors such as deep binding or duplicate bindings
+        // (note: this doesn't work)
+        // SystemInstance.get().setProperty("openejb.geronimo","true");
 
         props.setProperty("openejb.assembler",JettyAssembler.class.getName());
 

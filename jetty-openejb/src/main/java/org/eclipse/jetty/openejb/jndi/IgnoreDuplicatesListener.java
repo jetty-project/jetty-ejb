@@ -19,6 +19,7 @@
 package org.eclipse.jetty.openejb.jndi;
 
 import javax.naming.Binding;
+import javax.naming.NameAlreadyBoundException;
 import javax.naming.NamingException;
 
 import org.eclipse.jetty.jndi.NamingContext;
@@ -42,7 +43,7 @@ public class IgnoreDuplicatesListener implements Listener
             Object val = ctx.lookup(binding.getName());
             if (val != null)
             {
-                LOG.warn("Duplicate detected: {}",binding);
+                LOG.warn("Duplicate detected: "+binding,new NameAlreadyBoundException(binding.getName()));
                 return null;
             }
         }

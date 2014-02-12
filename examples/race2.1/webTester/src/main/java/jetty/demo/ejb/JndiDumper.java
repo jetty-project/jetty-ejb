@@ -1,9 +1,11 @@
 package jetty.demo.ejb;
 
-import java.io.PrintWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
 
 import jetty.demo.ejb.jndi.DefaultImpl;
 import jetty.demo.ejb.jndi.JettyImpl;
@@ -15,7 +17,7 @@ public class JndiDumper
     {
         public boolean isKnown(Object obj);
 
-        public void dump(PrintWriter out, Object obj);
+        public void dump(HttpServletResponse resp, String searchTerm, Object obj) throws IOException;
     }
 
     private static final List impls = new ArrayList();

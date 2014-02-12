@@ -4,7 +4,9 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -70,5 +72,39 @@ public class RaceArquillianTest
     {
         String resp = new SimpleRequest(deploymentUrl.toURI()).getString("/webTester/tester/find-team-info/");
         assertThat("response",resp,containsString("cherry"));
+    }
+
+    @Test
+    public void saveAllResults() throws UnknownHostException, IOException, URISyntaxException
+    {
+        File outputDir = MavenTestingUtils.getTargetTestingDir("webtester-reports");
+        FS.ensureDirExists(outputDir);
+        String reports[][] = new String[][] {
+                // [path to report], [output report filename]
+                { "/webTester/tester/jndi-dump/java:", "tomee-jndi-dump-java.html" }, //
+                { "/webTester/tester/jndi-dump-native/java:", "tomee-jndi-dump-native-java.txt" }, //
+                { "/webTester/tester/jndi-dump/openejb:", "tomee-jndi-dump-openejb.html" }, //
+                { "/webTester/tester/jndi-dump-native/openejb:", "tomee-jndi-dump-native-openejb.txt" }, //
+                { "/webTester/tester/find-team-info/", "tomee-find-team-info.txt" }, //
+        };
+        for (String[] req : reports)
+        {
+            String resp = new SimpleRequest(deploymentUrl.toURI()).getString(req[0]);
+            File outputFile = new File(outputDir,req[1]);
+            StringReader reader = null;
+            FileWriter writer = null;
+            try
+            {
+                reader = new StringReader(resp);
+                writer = new FileWriter(outputFile,false);
+                IO.copy(reader,writer);
+                System.out.println("Wrote file: " + outputFile);
+            }
+            finally
+            {
+                IO.close(reader);
+                IO.close(writer);
+            }
+        }
     }
 }

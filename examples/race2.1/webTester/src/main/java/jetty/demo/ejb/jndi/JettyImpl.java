@@ -1,6 +1,9 @@
 package jetty.demo.ejb.jndi;
 
+import java.io.IOException;
 import java.io.PrintWriter;
+
+import javax.servlet.http.HttpServletResponse;
 
 import jetty.demo.ejb.JndiDumper.Impl;
 import jetty.demo.ejb.reflect.ReflectUtils;
@@ -18,13 +21,16 @@ public class JettyImpl implements Impl
         jettyLocalContextClass = ReflectUtils.findOptionalClass("org.eclipse.jetty.jndi.local.localContextRoot");
     }
 
-    public boolean isKnown(Object obj)
+    public void dump(HttpServletResponse resp, String searchTerm, Object obj) throws IOException
     {
-        return ReflectUtils.isInstanceOf(obj,jettyNamingContextClass) || ReflectUtils.isInstanceOf(obj,jettyJavaRootContextClass)
-                || ReflectUtils.isInstanceOf(obj,jettyLocalContextClass);
+        resp.setContentType("text/plain");
+        PrintWriter out = resp.getWriter();
+        out.println("Dump JNDI(searchTerm='" + searchTerm + "')");
+        out.println("Lookup Result: " + obj);
+        dump(out,obj);
     }
 
-    public void dump(PrintWriter out, Object obj)
+    private void dump(PrintWriter out, Object obj)
     {
         try
         {
@@ -60,5 +66,11 @@ public class JettyImpl implements Impl
         Class params[] = new Class[] { Appendable.class, String.class };
         Object args[] = new Object[] { out, "  " };
         ReflectUtils.invokeMethod(obj,"dump",params,args);
+    }
+
+    public boolean isKnown(Object obj)
+    {
+        return ReflectUtils.isInstanceOf(obj,jettyNamingContextClass) || ReflectUtils.isInstanceOf(obj,jettyJavaRootContextClass)
+                || ReflectUtils.isInstanceOf(obj,jettyLocalContextClass);
     }
 }

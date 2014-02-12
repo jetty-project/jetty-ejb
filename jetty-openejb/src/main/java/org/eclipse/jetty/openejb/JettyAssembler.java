@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.naming.Context;
 import javax.naming.NamingException;
 
 import org.apache.openejb.AppContext;

@@ -6,6 +6,8 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 
+import javax.servlet.http.HttpServletResponse;
+
 import jetty.demo.ejb.JndiDumper.Impl;
 import jetty.demo.ejb.reflect.ReflectUtils;
 
@@ -22,13 +24,30 @@ public class OpenEJBImpl implements Impl
         oejbObjectRefClass = ReflectUtils.findOptionalClass("org.apache.openejb.core.ivm.naming.ObjectReference");
     }
 
-    public boolean isKnown(Object obj)
+    private void close(Closeable c)
     {
-        return ReflectUtils.isInstanceOf(obj,oejbIvmContextClass) || ReflectUtils.isInstanceOf(obj,oejbObjectRefClass);
+        if (c == null)
+        {
+            return;
+        }
+        try
+        {
+            c.close();
+        }
+        catch (IOException ignore)
+        {
+            // ignore
+        }
     }
 
-    public void dump(PrintWriter out, Object obj)
+    public void dump(HttpServletResponse resp, String searchTerm, Object obj) throws IOException
     {
+        resp.setContentType("text/plain");
+        PrintWriter out = resp.getWriter();
+
+        out.println("Dump JNDI(searchTerm='" + searchTerm + "')");
+        out.println("Lookup Result: " + obj);
+
         try
         {
             if (ReflectUtils.isInstanceOf(obj,oejbIvmContextClass))
@@ -75,19 +94,8 @@ public class OpenEJBImpl implements Impl
         }
     }
 
-    private void close(Closeable c)
+    public boolean isKnown(Object obj)
     {
-        if (c == null)
-        {
-            return;
-        }
-        try
-        {
-            c.close();
-        }
-        catch (IOException ignore)
-        {
-            // ignore
-        }
+        return ReflectUtils.isInstanceOf(obj,oejbIvmContextClass) || ReflectUtils.isInstanceOf(obj,oejbObjectRefClass);
     }
 }
