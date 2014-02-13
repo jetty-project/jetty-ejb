@@ -46,7 +46,7 @@ public class RaceApp21Test
         File tmpDir = MavenTestingUtils.getTargetTestingDir("raceapp21");
         FS.ensureEmpty(tmpDir);
 
-        File earFile = new File(tmpDir,"raceapp.ear");
+        File earFile = new File(tmpDir,"raceApp.ear");
 
         File srcFile = MavenTestingUtils.getProjectFile("src/test/apps/raceApp-2.1.ear");
         IO.copyFile(srcFile,earFile);
@@ -109,14 +109,14 @@ public class RaceApp21Test
     public void getFindTeamInfo() throws UnknownHostException, IOException
     {
         String resp = new SimpleRequest(serverURI).getString("/webTester/tester/find-team-info/");
-        assertThat("response",resp,containsString("cherry"));
+        assertThat("response",resp,containsString("TeamInfoHome => proxy=jetty.demo.ejb.TeamInfo;deployment=TeamInfoEJB"));
     }
 
     @Test
     public void getDumpJndi() throws UnknownHostException, IOException
     {
         String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-dump/java:");
-        assertThat("response",resp,containsString("cherry"));
+        assertThat("response",resp,containsString("java:global/raceApp/ejbTeam/TeamInfoEJB"));
     }
 
     @Test
@@ -124,7 +124,7 @@ public class RaceApp21Test
     {
         // String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-lookup/java:openejb/Container/Default%20Stateless%20Container/");
         String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-lookup/java:");
-        assertThat("response",resp,containsString("cherry"));
+        assertThat("response",resp,containsString("java:global/raceApp/ejbTeam/TeamInfoEJB"));
     }
 
     @Test

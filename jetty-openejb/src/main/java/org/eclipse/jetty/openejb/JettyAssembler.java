@@ -18,22 +18,12 @@
 
 package org.eclipse.jetty.openejb;
 
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import javax.naming.NamingException;
 
-import org.apache.openejb.AppContext;
 import org.apache.openejb.OpenEJBException;
-import org.apache.openejb.SystemException;
-import org.apache.openejb.assembler.classic.AppInfo;
-import org.apache.openejb.assembler.classic.EjbJarInfo;
-import org.apache.openejb.assembler.classic.EnterpriseBeanInfo;
-import org.apache.openejb.core.JndiFactory;
-import org.apache.openejb.loader.SystemInstance;
-import org.eclipse.jetty.jndi.NamingUtil;
 import org.eclipse.jetty.openejb.jndi.JettyJndiFactory;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
@@ -57,47 +47,6 @@ public class JettyAssembler extends org.apache.openejb.assembler.classic.Assembl
     }
 
     @Override
-    public AppContext createApplication(AppInfo appInfo, ClassLoader classLoader, boolean start) throws OpenEJBException, IOException, NamingException
-    {
-        establishParentJndiReferences(appInfo);
-        return super.createApplication(appInfo,classLoader,start);
-    }
-
-    private void establishParentJndiReferences(AppInfo appInfo) throws NamingException, SystemException
-    {
-        JndiFactory jndiFactory = SystemInstance.get().getComponent(JndiFactory.class);
-        String appName = appInfo.appId;
-
-        Map<String, Object> appBindings = new HashMap<>();
-        Map<String, Object> rootBindings = new HashMap<>();
-
-        appBindings.put("comp/info/.","");
-        appBindings.put("info/.","");
-        appBindings.put(String.format("global/%s/.",appName),"");
-        rootBindings.put(String.format("openejb/global/global/%s/.",appName),"");
-
-        for (EjbJarInfo ejbJarInfo : appInfo.ejbJars)
-        {
-            String moduleName = ejbJarInfo.moduleName;
-
-            appBindings.put(String.format("global/%s/%s/.",appName,moduleName),"");
-            appBindings.put(String.format("app/%s/.",ejbJarInfo.moduleId),"");
-            rootBindings.put(String.format("openejb/global/global/%s/%s/.",appName,moduleName),"");
-
-            for (EnterpriseBeanInfo beanInfo : ejbJarInfo.enterpriseBeans)
-            {
-                rootBindings.put(String.format("openejb/Deployment/%s/.",beanInfo.ejbDeploymentId),"");
-            }
-        }
-
-        jndiFactory.createComponentContext(appBindings);
-        for (Map.Entry<String, Object> entry : rootBindings.entrySet())
-        {
-            NamingUtil.bind(jndiFactory.createRootContext(),entry.getKey(),entry.getValue());
-        }
-    }
-
-    @Override
     public void build() throws OpenEJBException
     {
         LOG.debug(".build()");
@@ -117,5 +66,4 @@ public class JettyAssembler extends org.apache.openejb.assembler.classic.Assembl
         LOG.debug(".bindGlobals({})",bindings);
         super.bindGlobals(bindings);
     }
-
 }
