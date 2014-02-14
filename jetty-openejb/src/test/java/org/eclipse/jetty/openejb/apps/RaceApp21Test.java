@@ -10,12 +10,11 @@ import java.io.StringReader;
 import java.net.URI;
 import java.net.UnknownHostException;
 
-import org.eclipse.jetty.openejb.JettyOpenEJB;
-import org.eclipse.jetty.openejb.JettyOpenEJBAppContexts;
+import org.eclipse.jetty.openejb.JettyOpenEJBModule;
 import org.eclipse.jetty.openejb.logging.LoggingUtil;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.toolchain.test.FS;
 import org.eclipse.jetty.toolchain.test.IO;
 import org.eclipse.jetty.toolchain.test.MavenTestingUtils;
@@ -63,15 +62,12 @@ public class RaceApp21Test
         connector.setPort(0); // let OS pick
         server.addConnector(connector);
 
-        HandlerCollection contexts = new HandlerCollection();
+        ContextHandlerCollection contexts = new ContextHandlerCollection();
         server.setHandler(contexts);
 
-        JettyOpenEJB.enableOn(server,contexts);
-
-        JettyOpenEJBAppContexts apps = new JettyOpenEJBAppContexts();
-        apps.addApp(earFile);
-
-        contexts.addHandler(apps);
+        JettyOpenEJBModule openejb = new JettyOpenEJBModule(server,contexts);
+        openejb.setAppScanDirectory(earFile.getParentFile());
+        server.addBean(openejb);
 
         server.start();
         if (LOG.isDebugEnabled())
@@ -79,7 +75,7 @@ public class RaceApp21Test
             LOG.debug("dump: {}",server.dump());
         }
 
-        assertThat("apps.isStarted",apps.isStarted(),is(true));
+        assertThat("openejb.isStarted",openejb.isStarted(),is(true));
 
         String host = connector.getHost();
         if (host == null)
@@ -95,21 +91,9 @@ public class RaceApp21Test
     public static void stopServer() throws Exception
     {
         if (server != null)
+        {
             server.stop();
-    }
-
-    @Test
-    public void getTeamInfo() throws UnknownHostException, IOException
-    {
-        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/team-info/cherry");
-        assertThat("response",resp,containsString("cherry"));
-    }
-
-    @Test
-    public void getFindTeamInfo() throws UnknownHostException, IOException
-    {
-        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/find-team-info/");
-        assertThat("response",resp,containsString("TeamInfoHome => proxy=jetty.demo.ejb.TeamInfo;deployment=TeamInfoEJB"));
+        }
     }
 
     @Test
@@ -120,11 +104,17 @@ public class RaceApp21Test
     }
 
     @Test
-    public void testJNDI() throws UnknownHostException, IOException
+    public void getFindTeamInfo() throws UnknownHostException, IOException
     {
-        // String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-lookup/java:openejb/Container/Default%20Stateless%20Container/");
-        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-lookup/java:");
-        assertThat("response",resp,containsString("java:global/raceApp/ejbTeam/TeamInfoEJB"));
+        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/find-team-info/");
+        assertThat("response",resp,containsString("TeamInfoHome => proxy=jetty.demo.ejb.TeamInfo;deployment=TeamInfoEJB"));
+    }
+
+    @Test
+    public void getTeamInfo() throws UnknownHostException, IOException
+    {
+        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/team-info/cherry");
+        assertThat("response",resp,containsString("cherry"));
     }
 
     @Test
@@ -150,5 +140,13 @@ public class RaceApp21Test
                 LOG.info("Wrote file: " + outputFile);
             }
         }
+    }
+
+    @Test
+    public void testJNDI() throws UnknownHostException, IOException
+    {
+        // String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-lookup/java:openejb/Container/Default%20Stateless%20Container/");
+        String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-lookup/java:");
+        assertThat("response",resp,containsString("java:global/raceApp/ejbTeam/TeamInfoEJB"));
     }
 }

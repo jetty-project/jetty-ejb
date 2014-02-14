@@ -31,20 +31,26 @@ import org.apache.openejb.OpenEJBException;
 import org.apache.openejb.UndeployException;
 import org.apache.openejb.assembler.classic.AppInfo;
 import org.apache.openejb.config.ConfigurationFactory;
+import org.eclipse.jetty.server.handler.HandlerCollection;
 
+/**
+ * Main container interface for JettyEJB
+ */
 public interface JettyEJBContainer
 {
-    public AppInfo getAppInfo(String name);
+    public AppContext deploy(String name, File file) throws OpenEJBException, IOException, NamingException;
 
     public AppContext getAppContext(String moduleId);
 
-    public Set<String> getModuleIds();
-
-    public Context getJndiContext();
+    public AppInfo getAppInfo(String name);
 
     public ConfigurationFactory getConfigurationFactory();
 
-    public AppContext deploy(String name, File file) throws OpenEJBException, IOException, NamingException;
+    public HandlerCollection getHandlerCollection();
+
+    public Context getJndiContext();
+
+    public Set<String> getModuleIds();
 
     public void undeploy(String name) throws UndeployException, NoSuchApplicationException;
 }

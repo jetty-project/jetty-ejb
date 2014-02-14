@@ -1,4 +1,4 @@
-package org.eclipse.jetty.openejb;
+package org.eclipse.jetty.openejb.app;
 
 import java.io.IOException;
 import java.io.InputStream;

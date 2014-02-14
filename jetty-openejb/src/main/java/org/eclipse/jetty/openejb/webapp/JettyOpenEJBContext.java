@@ -1,4 +1,4 @@
-package org.eclipse.jetty.openejb;
+package org.eclipse.jetty.openejb.webapp;
 
 import org.apache.openejb.assembler.classic.AppInfo;
 import org.eclipse.jetty.webapp.WebAppContext;

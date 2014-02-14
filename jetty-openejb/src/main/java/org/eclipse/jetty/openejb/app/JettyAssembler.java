@@ -16,7 +16,7 @@
 //  ========================================================================
 //
 
-package org.eclipse.jetty.openejb;
+package org.eclipse.jetty.openejb.app;
 
 import java.util.Map;
 import java.util.Properties;

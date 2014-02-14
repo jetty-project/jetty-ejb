@@ -1,3 +1,21 @@
+//
+//  ========================================================================
+//  Copyright (c) 1995-2014 Mort Bay Consulting Pty. Ltd.
+//  ------------------------------------------------------------------------
+//  All rights reserved. This program and the accompanying materials
+//  are made available under the terms of the Eclipse Public License v1.0
+//  and Apache License v2.0 which accompanies this distribution.
+//
+//      The Eclipse Public License is available at
+//      http://www.eclipse.org/legal/epl-v10.html
+//
+//      The Apache License v2.0 is available at
+//      http://www.opensource.org/licenses/apache2.0.php
+//
+//  You may elect to redistribute this code under either of these licenses.
+//  ========================================================================
+//
+
 package org.eclipse.jetty.openejb;
 
 import java.util.ArrayList;
@@ -7,7 +25,6 @@ import java.util.Properties;
 import org.apache.openejb.OpenEJB;
 import org.apache.openejb.assembler.WebAppDeployer;
 import org.apache.openejb.assembler.classic.WebAppBuilder;
-import org.apache.openejb.classloader.WebAppEnricher;
 import org.apache.openejb.config.ConfigurationFactory;
 import org.apache.openejb.core.ParentClassLoaderFinder;
 import org.apache.openejb.core.ServerFederation;
@@ -18,15 +35,20 @@ import org.apache.openejb.server.ServiceManager;
 import org.apache.openejb.server.ejbd.EjbServer;
 import org.apache.openejb.util.LogCategory;
 import org.apache.openejb.util.OptionsLog;
+import org.eclipse.jetty.openejb.app.JettyParentClassLoaderFinder;
+import org.eclipse.jetty.openejb.util.PropertyUtils;
 import org.eclipse.jetty.openejb.webapp.JettyWebAppBuilder;
 import org.eclipse.jetty.openejb.webapp.JettyWebAppDeployer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 
-public class JettyOpenEJBLoader implements Loader
+/**
+ * Embedded Server loader for OpenEJB to call when loading from {@link org.apache.openejb.loader.Embedder}
+ */
+public class JettyLoader implements Loader
 {
-    private static final Logger LOG = Log.getLogger(JettyOpenEJBLoader.class);
+    private static final Logger LOG = Log.getLogger(JettyLoader.class);
 
     /** OpenEJB Server Daemon */
     private static EjbServer ejbServer;
@@ -36,16 +58,40 @@ public class JettyOpenEJBLoader implements Loader
     private static final List<ServerService> services = new ArrayList<ServerService>();
 
     /**
-     * This is not context specific
+     * Default Constructor.
+     */
+    public JettyLoader()
+    {
+        /* REQUIRED BY OPENEJB */
+    }
+
+    private void copySystemInstanceProperty(Properties props, String key)
+    {
+        String value = SystemInstance.get().getProperty(key);
+        if (value != null)
+        {
+            props.put(key,value);
+        }
+    }
+
+    /**
+     * Called by {@link org.apache.openejb.loader.Embedder}
      */
     @Override
     public void init(Properties properties) throws Exception
     {
         LOG.debug("init({})",properties);
-        initSystemEJBS(properties);
+
+        // System Instance defaults
+        PropertyUtils.defaultIfUnset(properties,"openejb.system.apps","true");
+        PropertyUtils.defaultIfUnset(properties,"openejb.deployments.classpath","false");
+        PropertyUtils.defaultIfUnset(properties,"openejb.deployments.classpath.filter.systemapps","false");
+
+        properties.setProperty("openejb.provider.default","org.eclipse.jetty.openejb");
 
         SystemInstance.init(properties);
 
+        // Setup logging
         OptionsLog.install();
 
         // See if we can just use what's there
@@ -60,7 +106,7 @@ public class JettyOpenEJBLoader implements Loader
                 System.getProperty("openejb.default.deployment-module","org.apache.openejb.config.WebModule"));
 
         Server server = SystemInstance.get().getComponent(Server.class);
-        
+
         SystemInstance.get().setComponent(ConfigurationFactory.class,new ConfigurationFactory());
 
         SystemInstance.get().setComponent(WebAppBuilder.class,new JettyWebAppBuilder());
@@ -69,27 +115,23 @@ public class JettyOpenEJBLoader implements Loader
 
         SystemInstance.get().setComponent(WebAppDeployer.class,new JettyWebAppDeployer());
 
-        SystemInstance.get().setComponent(WebAppEnricher.class,new JettyClassEnricher(server));
-
-        // TODO: deal with JaxRS
-        // TODO: deal with JaxWs
+        // TODO: deal with JaxRS?
+        // TODO: deal with JaxWs?
 
         ejbServer = new EjbServer();
         SystemInstance.get().setComponent(EjbServer.class,ejbServer);
-        OpenEJB.init(properties, new ServerFederation());
-
-        // TODO: move JNDI resources defined in server to OpenEJB?
+        OpenEJB.init(properties,new ServerFederation());
 
         Properties ejbProps = new Properties();
         ejbProps.putAll(properties);
-        copySystemProp(ejbProps,"ejbd.serializer");
-        copySystemProp(ejbProps,"ejbd.gzip");
+        copySystemInstanceProperty(ejbProps,"ejbd.serializer");
+        copySystemInstanceProperty(ejbProps,"ejbd.gzip");
         // TODO: how to calculate appropriate url?
         ejbProps.setProperty("openejb.ejbd.uri","http://127.0.0.1:8080/ejb");
         ejbServer.init(ejbProps);
 
         // Setup service manager
-        ClassLoader cl = JettyOpenEJBLoader.class.getClassLoader();
+        ClassLoader cl = JettyOpenEJBModule.class.getClassLoader();
         if (SystemInstance.get().getOptions().get("openejb.servicemanager.enabled",true))
         {
             String clazz = SystemInstance.get().getOptions().get("openejb.service.manager.class",JettyServiceManager.class.getName());
@@ -139,34 +181,6 @@ public class JettyOpenEJBLoader implements Loader
             {
                 LOG.warn("REST failed to start",e);
             }
-        }
-
-    }
-
-    private void copySystemProp(Properties props, String key)
-    {
-        String value = SystemInstance.get().getProperty(key);
-        if (value != null)
-        {
-            props.put(key,value);
-        }
-    }
-
-    private void initSystemEJBS(Properties properties)
-    {
-        defaultIfUnset(properties,"openejb.system.apps","true");
-        defaultIfUnset(properties,"openejb.deployments.classpath","false");
-        defaultIfUnset(properties,"openejb.deployments.classpath.filter.systemapps","false");
-
-        properties.setProperty("openejb.provider.default","org.eclipse.jetty.openejb");
-    }
-
-    private void defaultIfUnset(Properties properties, String key, String defValue)
-    {
-        String val = properties.getProperty(key);
-        if (val == null)
-        {
-            properties.setProperty(key,defValue);
         }
     }
 }

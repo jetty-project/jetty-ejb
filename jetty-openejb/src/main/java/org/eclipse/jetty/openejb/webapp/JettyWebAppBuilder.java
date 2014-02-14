@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.openejb.OpenEJBException;
+import org.apache.openejb.OpenEJBRuntimeException;
 import org.apache.openejb.assembler.classic.AppInfo;
 import org.apache.openejb.assembler.classic.WebAppBuilder;
 import org.apache.openejb.assembler.classic.WebAppInfo;
@@ -18,7 +19,7 @@ import org.apache.openejb.config.DeploymentLoader;
 import org.apache.openejb.config.WebModule;
 import org.apache.openejb.core.TempClassLoader;
 import org.apache.openejb.loader.SystemInstance;
-import org.eclipse.jetty.openejb.JettyOpenEJBContext;
+import org.eclipse.jetty.openejb.JettyEJBContainer;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.util.log.Log;
@@ -38,47 +39,21 @@ public class JettyWebAppBuilder implements WebAppBuilder
         this.deployLoader = new DeploymentLoader();
     }
 
-    private HandlerCollection getHandlers()
+    public JettyOpenEJBContext addContext(WebAppContext webapp)
     {
-        return SystemInstance.get().getComponent(HandlerCollection.class);
-    }
-
-    @Override
-    public void deployWebApps(AppInfo appInfo, ClassLoader classLoader) throws Exception
-    {
-        LOG.debug("deployWebApps({},{})",appInfo,classLoader);
-
-        ClassLoader parent = classLoader;
-        if (parent instanceof TempClassLoader)
+        String contextRoot = webapp.getContextPath();
+        JettyOpenEJBContext context;
+        synchronized (contexts)
         {
-            parent = ((TempClassLoader)parent).getParent();
-        }
-
-        HandlerCollection handlers = getHandlers();
-        for (WebAppInfo webappInfo : appInfo.webApps)
-        {
-            LOG.debug("deploy webappInfo: {}",webappInfo);
-
-            File appFile = new File(webappInfo.path);
-
-            JettyOpenEJBContext context = getContext(appFile);
+            context = contexts.get(contextRoot);
             if (context == null)
             {
-                WebAppContext webapp = new WebAppContext();
-                webapp.setWar(appFile.getAbsolutePath());
-                webapp.setClassLoader(new WebAppClassLoader(parent,webapp));
-                String contextRoot = webappInfo.contextRoot;
-                if (contextRoot.charAt(0) != '/')
-                {
-                    contextRoot = '/' + contextRoot;
-                }
-                webapp.setContextPath(contextRoot);
-                handlers.addHandler(webapp);
-
-                context = addContext(webapp);
-                context.appInfo = appInfo;
+                context = new JettyOpenEJBContext();
+                context.webapp = webapp;
+                contexts.put(contextRoot,context);
             }
         }
+        return context;
     }
 
     public AppInfo configure(JettyWebAppFinder finder, WebAppContext context) throws OpenEJBException
@@ -119,77 +94,51 @@ public class JettyWebAppBuilder implements WebAppBuilder
     }
 
     @Override
-    public void undeployWebApps(AppInfo appInfo) throws Exception
+    public void deployWebApps(AppInfo appInfo, ClassLoader classLoader) throws Exception
     {
-        LOG.debug("undeployWebApps({})",appInfo);
+        LOG.debug("deployWebApps({},{})",appInfo,classLoader);
+
+        ClassLoader parent = classLoader;
+        if (parent instanceof TempClassLoader)
+        {
+            parent = ((TempClassLoader)parent).getParent();
+        }
 
         HandlerCollection handlers = getHandlers();
-
-        List<Handler> remainingHandlers = new ArrayList<>();
-        remainingHandlers.addAll(Arrays.asList(handlers.getHandlers()));
-
         for (WebAppInfo webappInfo : appInfo.webApps)
         {
-            LOG.debug("undeploy webappInfo: {}",webappInfo);
+            LOG.debug("deploy webappInfo: {}",webappInfo);
 
             File appFile = new File(webappInfo.path);
+
             JettyOpenEJBContext context = getContext(appFile);
-            if (context != null)
-            {
-                if (context.webapp != null)
-                {
-                    context.webapp.stop();
-                    remainingHandlers.remove(context.webapp);
-                }
-                removeContext(context.webapp);
-            }
-        }
-
-        int len = remainingHandlers.size();
-        handlers.setHandlers(remainingHandlers.toArray(new Handler[len]));
-    }
-
-    @Override
-    public Map<ClassLoader, Map<String, Set<String>>> getJsfClasses()
-    {
-        LOG.debug("getJsfClasses()");
-        return jsfClasses;
-    }
-
-    public JettyOpenEJBContext addContext(WebAppContext webapp)
-    {
-        String contextRoot = webapp.getContextPath();
-        JettyOpenEJBContext context;
-        synchronized (contexts)
-        {
-            context = contexts.get(contextRoot);
             if (context == null)
             {
-                context = new JettyOpenEJBContext();
-                context.webapp = webapp;
-                contexts.put(contextRoot,context);
+                WebAppContext webapp = new WebAppContext();
+                webapp.setWar(appFile.getAbsolutePath());
+                webapp.setClassLoader(new WebAppClassLoader(parent,webapp));
+                String contextRoot = webappInfo.contextRoot;
+                if (contextRoot.charAt(0) != '/')
+                {
+                    contextRoot = '/' + contextRoot;
+                }
+                webapp.setContextPath(contextRoot);
+                handlers.addHandler(webapp);
+
+                context = addContext(webapp);
+                context.appInfo = appInfo;
             }
         }
-        return context;
     }
 
-    public void removeContext(WebAppContext webapp)
+    private JettyEJBContainer getContainer()
     {
-        String contextRoot = webapp.getContextPath();
-        synchronized (contexts)
+        JettyEJBContainer container = SystemInstance.get().getComponent(JettyEJBContainer.class);
+        if (container == null)
         {
-            contexts.remove(contextRoot);
+            throw new OpenEJBRuntimeException("Missing system component: " + JettyEJBContainer.class.getName());
         }
-    }
-
-    public JettyOpenEJBContext getContext(String contextRoot)
-    {
-        JettyOpenEJBContext context;
-        synchronized (contexts)
-        {
-            context = contexts.get(contextRoot);
-        }
-        return context;
+        return container;
     }
 
     public JettyOpenEJBContext getContext(File file)
@@ -224,5 +173,67 @@ public class JettyWebAppBuilder implements WebAppBuilder
             }
         }
         return null;
+    }
+
+    public JettyOpenEJBContext getContext(String contextRoot)
+    {
+        JettyOpenEJBContext context;
+        synchronized (contexts)
+        {
+            context = contexts.get(contextRoot);
+        }
+        return context;
+    }
+
+    private HandlerCollection getHandlers()
+    {
+        return getContainer().getHandlerCollection();
+    }
+
+    @Override
+    public Map<ClassLoader, Map<String, Set<String>>> getJsfClasses()
+    {
+        LOG.debug("getJsfClasses()");
+        return jsfClasses;
+    }
+
+    public void removeContext(WebAppContext webapp)
+    {
+        String contextRoot = webapp.getContextPath();
+        synchronized (contexts)
+        {
+            contexts.remove(contextRoot);
+        }
+    }
+
+    @Override
+    public void undeployWebApps(AppInfo appInfo) throws Exception
+    {
+        LOG.debug("undeployWebApps({})",appInfo);
+
+        HandlerCollection handlers = getHandlers();
+
+        List<Handler> remainingHandlers = new ArrayList<>();
+        remainingHandlers.addAll(Arrays.asList(handlers.getHandlers()));
+
+        for (WebAppInfo webappInfo : appInfo.webApps)
+        {
+            LOG.debug("undeploy webappInfo: {}",webappInfo);
+
+            File appFile = new File(webappInfo.path);
+            JettyOpenEJBContext context = getContext(appFile);
+            if (context != null)
+            {
+                if (context.webapp != null)
+                {
+                    context.webapp.stop();
+                    remainingHandlers.remove(context.webapp);
+                }
+                removeContext(context.webapp);
+            }
+        }
+
+        int len = remainingHandlers.size();
+        handlers.setHandlers(remainingHandlers.toArray(new Handler[len]));
     }
 }
