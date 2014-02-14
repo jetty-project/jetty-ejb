@@ -129,6 +129,7 @@ public class RaceApp21Test
                 { "/webTester/tester/jndi-dump/openejb:", "jetty-jndi-dump-openejb.html" }, //
                 { "/webTester/tester/jndi-dump-native/openejb:", "jetty-jndi-dump-native-openejb.txt" }, //
                 { "/webTester/tester/find-team-info/", "jetty-find-team-info.txt" }, //
+                { "/webTester/tester/team-info/cherry", "jetty-team-info-chery.txt" }, //
         };
         for (String[] req : reports)
         {

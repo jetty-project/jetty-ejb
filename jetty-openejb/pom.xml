@@ -30,11 +30,12 @@
       <artifactId>jetty-deploy</artifactId>
       <version>${jetty.version}</version>
     </dependency>
+    <!-- 
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-jsp</artifactId>
       <version>${jetty.version}</version>
-    </dependency>
+    </dependency>  -->
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-annotations</artifactId>
