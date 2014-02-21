@@ -52,6 +52,12 @@
             <target>1.7</target>
           </configuration>
         </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <failIfNoTests>false</failIfNoTests>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>

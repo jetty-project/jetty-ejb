@@ -50,6 +50,7 @@ public class PathWatcher extends ContainerLifeCycle implements Runnable
     public static class Config
     {
         protected final Path dir;
+        protected boolean recursive = true;
         protected List<Pattern> includes;
         protected List<Pattern> excludes;
 
@@ -121,28 +122,39 @@ public class PathWatcher extends ContainerLifeCycle implements Runnable
             return false;
         }
 
-        public boolean isExcluded(Path dir)
+        public boolean isExcluded(Path path)
         {
             if (excludes.isEmpty())
             {
-                // no excludes == everything allowed
+                // return false == everything is allowed
                 return false;
             }
             // Use 'unixy' path separators
-            String fullpath = unixy(dir.normalize());
+            String fullpath = unixy(path.normalize());
             return hasMatch(fullpath,excludes);
         }
 
-        public boolean isIncluded(Path dir)
+        public boolean isIncluded(Path path)
         {
             if (includes.isEmpty())
             {
                 // no includes == everything allowed
                 return true;
             }
+
             // Use 'unixy' path separators
-            String fullpath = unixy(dir.normalize());
+            String fullpath = unixy(path.normalize());
             return hasMatch(fullpath,includes);
+        }
+
+        public boolean isRecursive()
+        {
+            return recursive;
+        }
+
+        public void setRecursive(boolean recursive)
+        {
+            this.recursive = recursive;
         }
 
         private String unixy(Path path)
@@ -191,6 +203,10 @@ public class PathWatcher extends ContainerLifeCycle implements Runnable
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
             {
+                if (!root.isRecursive() && !dir.endsWith(root.dir))
+                {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
                 if (Files.isHidden(dir))
                 {
                     return FileVisitResult.SKIP_SUBTREE;

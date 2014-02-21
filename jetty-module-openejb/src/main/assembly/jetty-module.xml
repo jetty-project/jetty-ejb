@@ -30,6 +30,8 @@
         <exclude>*:junit:*</exclude>
         <exclude>javax.*:*</exclude>
         <exclude>*:asm*:</exclude>
+        <exclude>ch.qos.logback:*</exclude>
+        <exclude>org.slf4j:*</exclude>
       </excludes>
     </dependencySet>
   </dependencySets>

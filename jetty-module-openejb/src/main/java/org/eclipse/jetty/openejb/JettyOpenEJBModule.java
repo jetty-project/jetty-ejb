@@ -181,6 +181,7 @@ public class JettyOpenEJBModule extends ContainerLifeCycle implements JettyEJBCo
         watcher.addListener(this);
 
         Config config = new Config(this.appScanDirectory);
+        config.setRecursive(false);
         config.addInclude(Pattern.compile(".*\\.ear$",Pattern.CASE_INSENSITIVE));
         config.addInclude(Pattern.compile(".*\\.war$",Pattern.CASE_INSENSITIVE));
         config.addInclude(Pattern.compile(".*\\.jar$",Pattern.CASE_INSENSITIVE));

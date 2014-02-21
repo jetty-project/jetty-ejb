@@ -1,5 +1,6 @@
 [depend]
 annotations
+logging
 plus
 webapp
 
