@@ -8,10 +8,10 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>jetty-openejb</artifactId>
+  <artifactId>jetty-module-openejb</artifactId>
   <packaging>jar</packaging>
 
-  <name>jetty-openejb</name>
+  <name>${project.artifactId}</name>
   <url>OpenEJB Integration for Jetty 9.x</url>
 
   <properties>
