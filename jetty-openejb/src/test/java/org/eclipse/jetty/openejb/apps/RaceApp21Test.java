@@ -107,7 +107,7 @@ public class RaceApp21Test
     public void getFindTeamInfo() throws UnknownHostException, IOException
     {
         String resp = new SimpleRequest(serverURI).getString("/webTester/tester/find-team-info/");
-        assertThat("response",resp,containsString("TeamInfoHome => proxy=jetty.demo.ejb.TeamInfo;deployment=TeamInfoEJB"));
+        assertThat("response",resp,containsString("TeamInfoHome (narrowed) => proxy=jetty.demo.ejb.TeamInfo;deployment=TeamInfoEJB"));
     }
 
     @Test
@@ -126,8 +126,6 @@ public class RaceApp21Test
                 // [path to report], [output report filename]
                 { "/webTester/tester/jndi-dump/java:", "jetty-jndi-dump-java.html" }, //
                 { "/webTester/tester/jndi-dump-native/java:", "jetty-jndi-dump-native-java.txt" }, //
-                { "/webTester/tester/jndi-dump/openejb:", "jetty-jndi-dump-openejb.html" }, //
-                { "/webTester/tester/jndi-dump-native/openejb:", "jetty-jndi-dump-native-openejb.txt" }, //
                 { "/webTester/tester/find-team-info/", "jetty-find-team-info.txt" }, //
                 { "/webTester/tester/team-info/cherry", "jetty-team-info-chery.txt" }, //
         };
@@ -146,7 +144,6 @@ public class RaceApp21Test
     @Test
     public void testJNDI() throws UnknownHostException, IOException
     {
-        // String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-lookup/java:openejb/Container/Default%20Stateless%20Container/");
         String resp = new SimpleRequest(serverURI).getString("/webTester/tester/jndi-lookup/java:");
         assertThat("response",resp,containsString("java:global/raceApp/ejbTeam/TeamInfoEJB"));
     }

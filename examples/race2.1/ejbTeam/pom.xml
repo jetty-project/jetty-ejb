@@ -50,6 +50,7 @@
                   <remoteinterface/>
                   <localhomeinterface/>
                   <localinterface/>
+                  <websphere/>
                   <deploymentdescriptor 
                     destDir="${project.build.outputDirectory}/META-INF"
                     displayName="${project.name}"

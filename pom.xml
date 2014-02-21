@@ -14,6 +14,7 @@
   <modules>
     <module>jetty-activemq</module>
     <module>jetty-openejb</module>
+    <module>jetty-module-logging-logback</module>
     <module>examples</module>
   </modules>
   <dependencyManagement>
