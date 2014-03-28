@@ -64,14 +64,14 @@ public class RaceArquillianTest
     public void testJndiLookupJava() throws UnknownHostException, IOException, URISyntaxException
     {
         String resp = new SimpleRequest(deploymentUrl.toURI()).getString("/webTester/tester/jndi-lookup/java:");
-        assertThat("response",resp,containsString("cherry"));
+        assertThat("response",resp,containsString("TeamInfoHome"));
     }
 
     @Test
     public void testFindTeamInfo() throws UnknownHostException, IOException, URISyntaxException
     {
         String resp = new SimpleRequest(deploymentUrl.toURI()).getString("/webTester/tester/find-team-info/");
-        assertThat("response",resp,containsString("cherry"));
+        assertThat("response",resp,containsString("TeamInfoHome"));
     }
 
     @Test
