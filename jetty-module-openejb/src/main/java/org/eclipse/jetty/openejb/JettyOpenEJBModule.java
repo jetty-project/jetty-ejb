@@ -249,6 +249,8 @@ public class JettyOpenEJBModule extends ContainerLifeCycle implements JettyEJBCo
             // Setup the parent classloader
             SystemInstance.init(props);
 
+            SystemInstance.get().setComponent(JettyEJBContainer.class,this);
+
             // integrate openejb
             embedder.init(props);
         }
@@ -259,7 +261,6 @@ public class JettyOpenEJBModule extends ContainerLifeCycle implements JettyEJBCo
 
         SystemInstance.get().setComponent(Server.class,this.server);
         SystemInstance.get().setComponent(HandlerCollection.class,this.handlers);
-        SystemInstance.get().setComponent(JettyEJBContainer.class,this);
     }
 
     private DeployedApp findAppByFileSystemPath(Path path)
