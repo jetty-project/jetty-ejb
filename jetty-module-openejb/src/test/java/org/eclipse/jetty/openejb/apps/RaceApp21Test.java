@@ -45,7 +45,13 @@ public class RaceApp21Test
         File tmpDir = MavenTestingUtils.getTargetTestingDir("raceapp21");
         FS.ensureEmpty(tmpDir);
 
-        File earFile = new File(tmpDir,"raceApp.ear");
+        File appsDir = new File(tmpDir,"ejbapps-t");
+        File workDir = new File(tmpDir,"work-t");
+
+        FS.ensureEmpty(appsDir);
+        FS.ensureEmpty(workDir);
+
+        File earFile = new File(appsDir,"raceApp.ear");
 
         File srcFile = MavenTestingUtils.getProjectFile("src/test/apps/raceApp-2.1.ear");
         IO.copyFile(srcFile,earFile);
@@ -66,7 +72,8 @@ public class RaceApp21Test
         server.setHandler(contexts);
 
         JettyOpenEJBModule openejb = new JettyOpenEJBModule(server,contexts);
-        openejb.setAppScanDirectory(earFile.getParentFile());
+        openejb.setAppScanDirectory(appsDir);
+        openejb.setAppWorkSubDirectory(workDir.getName());
         server.addBean(openejb);
 
         server.start();

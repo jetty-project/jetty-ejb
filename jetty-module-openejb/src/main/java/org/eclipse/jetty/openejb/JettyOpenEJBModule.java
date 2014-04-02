@@ -1,6 +1,7 @@
 package org.eclipse.jetty.openejb;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -52,7 +53,9 @@ public class JettyOpenEJBModule extends ContainerLifeCycle implements JettyEJBCo
     private static class DeployedApp
     {
         String name;
+        @SuppressWarnings("unused")
         public File file;
+        @SuppressWarnings("unused")
         public String path;
         AppInfo appInfo;
         AppContext appContext;
@@ -74,6 +77,10 @@ public class JettyOpenEJBModule extends ContainerLifeCycle implements JettyEJBCo
     private ContextHandlerCollection handlers;
     /** The directory to scan for possible openejb deployable artifacts */
     private File appScanDirectory;
+    /** The directory to use for unpacked (work) content */
+    private String appWorkSubDirectory;
+
+    private final File baseDir;
 
     /** Map of Deployed app names to {@link DeployedApp} references */
     private Map<String, DeployedApp> appMap = new HashMap<>();
@@ -87,10 +94,13 @@ public class JettyOpenEJBModule extends ContainerLifeCycle implements JettyEJBCo
         this.server = server;
         this.handlers = handlers;
         String basePath = EnvUtil.lookupPropertyValue("jetty.base","jetty.home","user.dir");
-        File baseDir = EnvUtil.lookupPath(basePath,".");
-        File appsDir = new File(baseDir,"apps");
+        baseDir = EnvUtil.lookupPath(basePath,".");
+        File appsDir = new File(baseDir,"ejbapps");
         LOG.info("OpenEJB App Scan Directory: {}",appsDir);
         this.appScanDirectory = appsDir;
+
+        this.appWorkSubDirectory = "work";
+        LOG.info("OpenEJB App Work SubDirectory: {}",appWorkSubDirectory);
     }
 
     private void configWebAppClassLoader(String key, Set<String> patterns)
@@ -177,6 +187,17 @@ public class JettyOpenEJBModule extends ContainerLifeCycle implements JettyEJBCo
         configFactory = getRequiredSystemComponent(ConfigurationFactory.class);
         assembler = getRequiredSystemComponent(Assembler.class);
 
+        if (!this.appScanDirectory.exists())
+        {
+            throw new FileNotFoundException("Configured appScanDirectory does not exist: " + this.appScanDirectory);
+        }
+
+        File workDir = new File(baseDir,appWorkSubDirectory);
+        if (!workDir.exists())
+        {
+            throw new FileNotFoundException("Configured appWorkSubDirectory [" + appWorkSubDirectory + "] does not exist: " + workDir);
+        }
+
         PathWatcher watcher = new PathWatcher();
         watcher.addListener(this);
 
@@ -220,6 +241,9 @@ public class JettyOpenEJBModule extends ContainerLifeCycle implements JettyEJBCo
         String baseDir = System.getProperty("jetty.base",homeDir);
         props.setProperty("openejb.base",baseDir);
         System.setProperty("openejb.base",baseDir);
+
+        props.setProperty("tomee.unpack.dir",appWorkSubDirectory);
+        System.setProperty("tomee.unpack.dir",appWorkSubDirectory);
 
         File openEjbWebAppLibs = new File(baseDir,"lib/openejb");
         props.setProperty("openejb.libs",openEjbWebAppLibs.getAbsolutePath());
@@ -446,6 +470,11 @@ public class JettyOpenEJBModule extends ContainerLifeCycle implements JettyEJBCo
     public void setAppScanDirectory(File dir)
     {
         this.appScanDirectory = dir;
+    }
+
+    public void setAppWorkSubDirectory(String appWorkSubDirectory)
+    {
+        this.appWorkSubDirectory = appWorkSubDirectory;
     }
 
     private void setupWebAppClassloader()

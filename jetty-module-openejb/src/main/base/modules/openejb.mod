@@ -11,5 +11,6 @@ lib/openejb/*.jar
 etc/jetty-openejb.xml
 
 [files]
-apps/
+ejbapps/
+work/
 
