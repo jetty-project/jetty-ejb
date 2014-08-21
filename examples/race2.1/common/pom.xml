@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.eclipse.jetty.demo</groupId>
     <artifactId>race2.1-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>9.2-SNAPSHOT</version>
   </parent>
   <artifactId>common</artifactId>
   <name>Common Lib</name>
