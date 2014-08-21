@@ -131,6 +131,7 @@ public class JettyOpenEJBModule extends ContainerLifeCycle implements JettyEJBCo
         conflist.addAfter("org.eclipse.jetty.webapp.FragmentConfiguration",//
                 OpenEJBConfiguration.class.getName());
         server.addBean(conflist);
+        server.setAttribute(Configuration.ATTR,null);
     }
 
     @Override

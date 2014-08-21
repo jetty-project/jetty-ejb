@@ -117,6 +117,7 @@ public class JettyWebAppBuilder implements WebAppBuilder
                 WebAppContext webapp = new WebAppContext();
                 webapp.setWar(appFile.getAbsolutePath());
                 webapp.setClassLoader(new WebAppClassLoader(parent,webapp));
+                webapp.setResourceBase(appFile.getAbsolutePath());
                 String contextRoot = webappInfo.contextRoot;
                 if (contextRoot.charAt(0) != '/')
                 {
@@ -124,6 +125,12 @@ public class JettyWebAppBuilder implements WebAppBuilder
                 }
                 webapp.setContextPath(contextRoot);
                 handlers.addHandler(webapp);
+
+                // Start the WebAppContext manually, as the Server is now
+                // in its STARTING phase, along with the HandlerCollection
+                // that this webapp was just added to.
+                // Its now to late to rely on default load order.
+                webapp.start();
 
                 context = addContext(webapp);
                 context.appInfo = appInfo;
